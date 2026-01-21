@@ -3,181 +3,90 @@ package com.appiancs.plugins.chartgenie.dto;
 import java.awt.Color;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
-import com.appiancorp.suiteapi.content.ContentService;
-
+@XmlRootElement(name = "chart-configuration")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ChartConfiguration {
 
-  // Service Dependencies
-  public ContentService cs;
+    @XmlElement(name = "chart-type")
+    private String chartType;
 
-  // -------------------
-  // INPUT PARAMETERS
-  // -------------------
-  /** The desired name for the new PDF document. */
-  public String targetChartDocumentName;
+    @XmlElement(name = "title")
+    private String title;
 
-  /** The optional description for the new PDF document. */
-  public String targetChartDocumentDesc;
+    @XmlElement(name = "width")
+    private int width;
 
-  /** The folder where the new PDF document will be saved. */
-  public Long targetChartFolder;
+    @XmlElement(name = "height")
+    private int height;
 
-  /**
-   * e.g. DONUT, COLUMN etc
-   **/
-  private String chartType; // "DONUT", "COLUMN", "LINE"
-  private String title;
-  private int width;
-  private int height;
+    // --- NEW FIELDS (For Local Test Runner) ---
+    @XmlElement(name = "categories")
+    private List<String> categories;
 
-  // Data
-  private Map<String, Double> dataPoints;
-  private List<String> hexColors; // e.g., ["#FF0000", "#0000FF"]
-  private String centerText; // Specific to Donut private Color parseHex(String hex) {
+    @XmlElement(name = "values")
+    private List<Number> values;
 
-  public String getChartType() {
-    return chartType;
-  }
+    // --- LEGACY FIELDS (For Old Strategies) ---
+    @XmlTransient // transient means "don't try to save this to XML"
+    private Map<String, Double> dataPoints = new HashMap<>();
 
-  // Standard Setter
-  public void setChartType(String chartType) {
-    this.chartType = chartType;
-  }
+    @XmlTransient
+    private Color primaryColor = new Color(30, 60, 150); // Default Blue
 
-  public com.appiancs.plugins.chartgenie.enums.ChartType getChartTypeEnum() {
-    return com.appiancs.plugins.chartgenie.enums.ChartType.fromString(this.chartType);
-  }
+    @XmlTransient
+    private List<String> hexColors = new ArrayList<>();
 
-  public String getTitle() {
-    return title;
-  }
+    // --- HELPER: Syncs the Lists (New) with the Map (Old) ---
+    // This ensures both parts of your code work together
+    public void setDataFromLists(List<String> cats, List<Number> vals) {
+        this.categories = cats;
+        this.values = vals;
 
-  public void setTitle(String title) {
-    // Trimming is good practice to avoid invisible whitespace issues from Appian
-    if (title != null) {
-      this.title = title.trim();
-    } else {
-      this.title = null;
-    }
-  }
-
-  public int getWidth() {
-    // Double check safety in getter, though setter handles it
-    return (width <= 0) ? 600 : width;
-  }
-
-  public void setWidth(int width) {
-    if (width <= 0) {
-      this.width = 600; // Default reasonable width
-    } else {
-      this.width = width;
-    }
-  }
-
-  public int getHeight() {
-    return (height <= 0) ? 400 : height;
-  }
-
-  public void setHeight(int height) {
-    if (height <= 0) {
-      this.height = 400; // Default reasonable height
-    } else {
-      this.height = height;
-    }
-  }
-
-  public Map<String, Double> getDataPoints() {
-    return dataPoints;
-  }
-
-  public void setDataPoints(Map<String, Double> dataPoints) {
-    this.dataPoints = dataPoints;
-  }
-
-  /**
-   * SPECIALISED HELPER: Call this from your Smart Service run() method.
-   * Appian passes data as two separate lists, so we merge them here.
-   * * @param categories List of Strings (X-axis/Labels)
-   * 
-   * @param values
-   *          List of Numbers (Y-axis/Values)
-   */
-  public void setDataFromLists(List<String> categories, List<Number> values) {
-    this.dataPoints = new java.util.LinkedHashMap<>(); // LinkedHashMap preserves insertion order!
-
-    if (categories == null || values == null) {
-      return;
+        // Auto-fill the legacy map so old strategies work
+        this.dataPoints.clear();
+        if (cats != null && vals != null) {
+            for (int i = 0; i < cats.size(); i++) {
+                if (i < vals.size()) {
+                    this.dataPoints.put(cats.get(i), vals.get(i).doubleValue());
+                }
+            }
+        }
     }
 
-    // Use the smaller size to avoid IndexOutOfBoundsException
-    int size = Math.min(categories.size(), values.size());
+    // --- GETTERS & SETTERS ---
+    public String getChartType() { return chartType; }
+    public void setChartType(String chartType) { this.chartType = chartType; }
 
-    for (int i = 0; i < size; i++) {
-      String key = categories.get(i);
-      Number val = values.get(i);
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-      // Handle potential nulls in the Appian list
-      if (key != null && val != null) {
-        this.dataPoints.put(key, val.doubleValue());
-      }
-    }
-  }
+    public int getWidth() { return width; }
+    public void setWidth(int width) { this.width = width; }
 
-  public List<String> getHexColors() {
-    // Return an empty list instead of null to be safe
-    if (hexColors == null) {
-      return new java.util.ArrayList<>();
-    }
-    return hexColors;
-  }
+    public int getHeight() { return height; }
+    public void setHeight(int height) { this.height = height; }
 
-  public void setHexColors(List<String> hexColors) {
-    this.hexColors = hexColors;
-  }
+    public List<String> getCategories() { return categories; }
+    public void setCategories(List<String> categories) { this.categories = categories; }
 
-  public Color getPrimaryColor() {
-    if (hexColors != null && !hexColors.isEmpty()) {
-      // formatting checks are handled in parseHex
-      return parseHex(hexColors.get(0));
-    }
-    return Color.BLACK; // Default fallback
-  }
+    public List<Number> getValues() { return values; }
+    public void setValues(List<Number> values) { this.values = values; }
 
-  public Color getSecondaryColor() {
-    if (hexColors != null && hexColors.size() > 1) {
-      return parseHex(hexColors.get(1));
-    }
-    return Color.LIGHT_GRAY; // Default fallback
-  }
+    // --- LEGACY GETTERS (Fixes "cannot find symbol") ---
+    public Map<String, Double> getDataPoints() { return dataPoints; }
+    public void setDataPoints(Map<String, Double> dataPoints) { this.dataPoints = dataPoints; }
 
-  public String getCenterText() {
-    return centerText;
-  }
+    public Color getPrimaryColor() { return primaryColor; }
+    public void setPrimaryColor(Color primaryColor) { this.primaryColor = primaryColor; }
 
-  public void setCenterText(String centerText) {
-    if (centerText != null) {
-      this.centerText = centerText.trim();
-    } else {
-      this.centerText = null;
-    }
-  }
-
-  private Color parseHex(String hex) {
-    if (hex == null || hex.trim().isEmpty()) {
-      return Color.BLACK;
-    }
-    try {
-      // Color.decode handles "#FFFFFF" format perfectly
-      return Color.decode(hex.trim());
-    } catch (NumberFormatException e) {
-      // SAFETY: If user sends bad data, do not crash the plugin.
-      // Return a default color and maybe log it.
-      System.err.println("Invalid Hex Color received: " + hex);
-      return Color.BLACK;
-    }
-  }
-
-  // Output Field
-  public Long newChartDocumentCreated;
+    public List<String> getHexColors() { return hexColors; }
+    public void setHexColors(List<String> hexColors) { this.hexColors = hexColors; }
 }

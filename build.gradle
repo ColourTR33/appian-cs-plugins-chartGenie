@@ -30,9 +30,31 @@ dependencies {
   compileOnly 'com.google.guava:guava:31.0.1-jre'
 
   // add your runtime dependencies here
-  // implementation 'groupId:artifactId:version'
-  // https://mvnrepository.com/artifact/jfree/jfreechart
-  implementation("jfree:jfreechart:1.0.13")
+  // implementation 'groupId:artifactId:version'// Source: https://mvnrepository.com/artifact/org.jfree/jfreechart
+  implementation("org.jfree:jfreechart:1.5.6")
+  implementation("org.apache.poi:poi-ooxml:5.5.1") {
+    // Exclude Log4j to prevent conflicts with Appian
+    exclude group: 'org.apache.logging.log4j'
+  }
+  implementation 'javax.xml.bind:jaxb-api:2.3.1'
+  implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+  implementation 'javax.activation:activation:1.1.1'
+  implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
+  def poiVersion = '5.5.1'
+  def log4jVersion = '2.24.1' // POI 5.x requires newer Log4j 2.x
+
+  // 1. Core POI library
+  implementation "org.apache.poi:poi:${poiVersion}"
+
+  // 2. OOXML (This automatically pulls in poi-ooxml-lite:5.5.1)
+  implementation "org.apache.poi:poi-ooxml:${poiVersion}"
+
+  // 3. REQUIRED: Remove 'poi-ooxml-schemas' entirely.
+  // Do NOT include: implementation "org.apache.poi:poi-ooxml-schemas:4.1.2"
+
+  // 4. Logging (POI 5.x is strict about this)
+  implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+  implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
 
   testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
@@ -102,6 +124,21 @@ jacocoTestCoverageVerification {
   }
 }
 
+// --- Custom Task to Run Local Test ---
+tasks.register('runLocalTest', JavaExec) {
+  group = 'verification'
+  description = 'Runs the LocalTestRunner application.'
+
+  // Set the classpath to include test classes and dependencies
+  classpath = sourceSets.test.runtimeClasspath
+
+  // The fully qualified name of your Main class
+  main = 'com.appiancs.plugins.chartgenie.test.LocalTestRunner'
+
+  // Ensure we can see the System.out.println logs
+  standardOutput = System.out
+}
+
 task jacocoRootReport(type: JacocoReport) {
   group 'ni'
   description 'Runs a jacoco coverage report'
@@ -123,7 +160,7 @@ task jacocoRootReport(type: JacocoReport) {
 configurations {
   testImplementation.extendsFrom compileOnly
   // excludes transitive dependencies
-  implementation.transitive = false
+  // implementation.transitive = false
 }
 
 pmd {

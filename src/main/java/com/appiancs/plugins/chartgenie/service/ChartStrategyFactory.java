@@ -1,33 +1,41 @@
 package com.appiancs.plugins.chartgenie.service;
 
-import com.appiancs.plugins.chartgenie.enums.ChartType;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
-import com.appiancs.plugins.chartgenie.strategies.impl.DonutChartStrategy;
-import com.appiancs.plugins.chartgenie.strategies.impl.PieStrategy;
-import com.appiancs.plugins.chartgenie.strategies.impl.StandardCategoryStrategy;
-import com.appiancs.plugins.chartgenie.strategies.impl.StandardXYStrategy;
+import com.appiancs.plugins.chartgenie.strategies.impl.*;
+// Add imports for Line, Pie, Bar strategies if you have them
 
 public class ChartStrategyFactory {
-  public static ChartGeneratorStrategy getStrategy(ChartType type) {
-    if (type == null)
-      type = ChartType.COLUMN;
 
-    switch (type) {
-      case DONUT:
-        return new DonutChartStrategy();
-      case PIE:
-      case PIE_3D:
-        return new PieStrategy(type);
-      case BAR:
-      case COLUMN:
-      case LINE:
-      case AREA:
-        return new StandardCategoryStrategy(type);
-      case SCATTER:
-      case XY_LINE:
-        return new StandardXYStrategy(type);
-      default:
-        throw new IllegalArgumentException("Strategy not implemented for: " + type);
+    public static ChartGeneratorStrategy getStrategy(String chartType) {
+        if (chartType == null) {
+            return new ColumnChartStrategy(); // Default
+        }
+
+        switch (chartType.toUpperCase()) {
+            case "COLUMN":
+                return new ColumnChartStrategy();
+            case "LINE":
+                return new LineChartStrategy();
+            case "COLUMN_STACKED":
+                return new StackedColumnStrategy();
+            case "BAR":
+                // return new BarChartStrategy(); // If you have a specific class
+                return new ColumnChartStrategy(); // Placeholder if sharing logic
+            case "PIE":
+                // return new PieStrategy();
+                return new DonutChartStrategy(); // Temporary fallback if Pie missing
+
+            // --- NEW TYPES START HERE ---
+            case "DONUT":
+                return new DonutChartStrategy();
+
+            case "AREA":
+                return new AreaChartStrategy();
+            // -----------------------------
+
+            default:
+                System.out.println("Warning: Unknown chart type '" + chartType + "'. Defaulting to Column.");
+                return new ColumnChartStrategy();
+        }
     }
-  }
 }

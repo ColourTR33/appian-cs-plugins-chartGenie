@@ -5,6 +5,7 @@ import java.awt.Color;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -36,6 +37,7 @@ public class ColumnChartStrategy implements ChartGeneratorStrategy {
       true, // Tooltips
       false // URLs
     );
+    StandardChartTheme.createJFreeTheme().apply(chart);
 
     CategoryPlot plot = chart.getCategoryPlot();
 

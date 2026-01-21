@@ -1,10 +1,24 @@
-<appian-plugin name="COMPLETE_ME" key="COMPLETE_ME">
-
+<appian-plugin name="ChartGenie" key="com.appiancs.plugins.chartgenie">
   <plugin-info>
-    <description>COMPLETE_ME</description>
+    <description>Suite of tools for generating and embedding charts.</description>
     <vendor name="Appian Corporation" url="https://www.appian.com" />
     <version>1.0.0</version>
     <application-version min="24.2" />
   </plugin-info>
 
+  <smart-services>
+    <smart-service name="GenerateChartImage" key="GenerateChartImage"
+      class="com.appiancs.plugins.chartgenie.GenerateChartImage">
+      <name>Generate Chart Image</name>
+      <category>Charts</category>
+      <description>Creates a static PNG chart from data.</description>
+    </smart-service>
+
+    <smart-service name="InsertChartIntoDocument" key="InsertChartIntoDocument"
+      class="com.appiancs.plugins.chartgenie.InsertChartIntoDocument">
+      <name>Insert Chart Into Document</name>
+      <category>Document Generation</category>
+      <description>Inserts a chart image into a new or existing Word document.</description>
+    </smart-service>
+  </smart-services>
 </appian-plugin>
