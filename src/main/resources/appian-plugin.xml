@@ -1,24 +1,19 @@
-<appian-plugin name="ChartGenie" key="com.appiancs.plugins.chartgenie">
-  <plugin-info>
-    <description>Suite of tools for generating and embedding charts.</description>
-    <vendor name="Appian Corporation" url="https://www.appian.com" />
-    <version>1.0.0</version>
-    <application-version min="24.2" />
-  </plugin-info>
+<smart-service name="GenerateChartReport" key="GenerateChartReport"
+  class="com.appiancs.plugins.chartgenie.GenerateChartReport">
+  <description>Generates a Word report with charts from JSON</description>
+  <order-index>10</order-index>
+  <icon-id>DOC_GEN</icon-id>
 
-  <smart-services>
-    <smart-service name="GenerateChartImage" key="GenerateChartImage"
-      class="com.appiancs.plugins.chartgenie.GenerateChartImage">
-      <name>Generate Chart Image</name>
-      <category>Charts</category>
-      <description>Creates a static PNG chart from data.</description>
-    </smart-service>
+  <input-params>
+    <input-param name="jsonPayload" type="STRING" required="true" label="JSON Payload" />
+    <input-param name="templateDocument" type="DOCUMENT" required="true" label="Template Document" />
+    <input-param name="newDocumentName" type="STRING" required="true" label="New Document Name" />
+    <input-param name="saveInFolder" type="FOLDER" required="true" label="Save In Folder" />
+  </input-params>
 
-    <smart-service name="InsertChartIntoDocument" key="InsertChartIntoDocument"
-      class="com.appiancs.plugins.chartgenie.InsertChartIntoDocument">
-      <name>Insert Chart Into Document</name>
-      <category>Document Generation</category>
-      <description>Inserts a chart image into a new or existing Word document.</description>
-    </smart-service>
-  </smart-services>
-</appian-plugin>
+  <output-params>
+    <output-param name="newDocument" type="DOCUMENT" label="New Document" />
+    <output-param name="isError" type="BOOLEAN" label="Is Error" />
+    <output-param name="errorMessage" type="STRING" label="Error Message" />
+  </output-params>
+</smart-service>

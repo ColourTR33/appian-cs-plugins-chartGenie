@@ -1,5 +1,6 @@
 package com.appiancs.plugins.chartgenie.dto.structure;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
@@ -7,16 +8,25 @@ import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 public class ReportSection {
 
   public enum SectionType {
-      HEADING, PARAGRAPH, CHART, TABLE
+      HEADING,
+      PARAGRAPH,
+      CHART,
+      TABLE,
+      PAGE_BREAK,
+      SIDEBAR_LAYOUT
   }
 
   private SectionType type;
 
-  // Content fields (used based on type)
+  // Existing fields...
   private String text;
   private ChartConfiguration chartConfig;
   private List<String> tableHeaders;
   private List<List<String>> tableRows;
+
+  // --- NEW FIELDS FOR LAYOUTS ---
+  private List<ReportSection> leftContent = new ArrayList<>();
+  private List<ReportSection> rightContent = new ArrayList<>();
 
   // -- Constructor Helpers --
   public static ReportSection createHeading(String text) {
@@ -46,6 +56,32 @@ public class ReportSection {
     s.tableHeaders = headers;
     s.tableRows = rows;
     return s;
+  }
+
+  // --- HELPER CONSTRUCTOR ---
+  public static ReportSection createSidebarLayout(List<ReportSection> left, List<ReportSection> right) {
+    ReportSection s = new ReportSection();
+    s.type = SectionType.SIDEBAR_LAYOUT;
+    s.leftContent = left;
+    s.rightContent = right;
+    return s;
+  }
+
+  // Getters and Setters for new lists
+  public List<ReportSection> getLeftContent() {
+    return leftContent;
+  }
+
+  public void setLeftContent(List<ReportSection> leftContent) {
+    this.leftContent = leftContent;
+  }
+
+  public List<ReportSection> getRightContent() {
+    return rightContent;
+  }
+
+  public void setRightContent(List<ReportSection> rightContent) {
+    this.rightContent = rightContent;
   }
 
   // -- Standard Getters & Setters --

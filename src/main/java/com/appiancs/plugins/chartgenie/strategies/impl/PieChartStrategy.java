@@ -7,16 +7,16 @@ import java.util.List;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.RingPlot;
-import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DefaultPieDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
-public class DonutChartStrategy implements ChartGeneratorStrategy {
+public class PieChartStrategy implements ChartGeneratorStrategy {
 
-  private static final Color BG_GREY = new Color(242, 242, 242); // Matches Sidebar F2F2F2
+  private static final Color BG_GREY = new Color(242, 242, 242);
+  // Corporate Palette
   private static final Color[] PALETTE = {
     new Color(30, 60, 150), // Dark Blue
     new Color(0, 184, 212), // Cyan
@@ -36,41 +36,37 @@ public class DonutChartStrategy implements ChartGeneratorStrategy {
       }
     }
 
-    JFreeChart chart = ChartFactory.createRingChart(
+    JFreeChart chart = ChartFactory.createPieChart(
       config.getTitle(), dataset, true, true, false);
 
-    // 1. BACKGROUND & BORDER
+    // Styling
     chart.setBackgroundPaint(BG_GREY);
-    chart.setBorderVisible(false); // No outer box
+    chart.setBorderVisible(false);
+    chart.getTitle().setFont(new Font("Segoe UI", Font.BOLD, 18));
+    chart.getTitle().setBackgroundPaint(BG_GREY);
 
-    // 2. TITLE
-    TextTitle title = chart.getTitle();
-    title.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Larger, cleaner
-    title.setPaint(Color.BLACK);
-    title.setBackgroundPaint(BG_GREY); // Ensure title matches bg
-
-    // 3. PLOT STYLING (The Donut)
-    RingPlot plot = (RingPlot) chart.getPlot();
+    PiePlot plot = (PiePlot) chart.getPlot();
     plot.setBackgroundPaint(BG_GREY);
-    plot.setOutlineVisible(false);
+    plot.setOutlineVisible(false); // No border around the whole circle
     plot.setShadowPaint(null);
+    plot.setLabelGenerator(null); // Cleaner look without external labels
+    plot.setSectionOutlinesVisible(true);
 
-    // Thicker Ring (0.35 = 35% of radius)
-    plot.setSectionDepth(0.35);
+    // Apply Palette & Outlines per Slice
+    BasicStroke whiteLine = new BasicStroke(2.0f);
 
-    // Remove separate labels (Too messy for sidebar)
-    plot.setLabelGenerator(null);
-
-    // White separator lines between slices
-    plot.setSeparatorPaint(Color.WHITE);
-    plot.setSeparatorStroke(new BasicStroke(2.0f));
-
-    // 4. COLORS
     for (int i = 0; i < dataset.getItemCount(); i++) {
-      plot.setSectionPaint(dataset.getKey(i), PALETTE[i % PALETTE.length]);
+      Comparable key = dataset.getKey(i);
+
+      // 1. Set Fill Color
+      plot.setSectionPaint(key, PALETTE[i % PALETTE.length]);
+
+      // 2. Set White Separator Line (The Fix)
+      plot.setSectionOutlinePaint(key, Color.WHITE);
+      plot.setSectionOutlineStroke(key, whiteLine);
     }
 
-    // 5. LEGEND
+    // Legend Styling
     if (chart.getLegend() != null) {
       chart.getLegend().setBackgroundPaint(BG_GREY);
       chart.getLegend().setItemFont(new Font("Segoe UI", Font.PLAIN, 12));

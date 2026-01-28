@@ -1,71 +1,70 @@
 package com.appiancs.plugins.chartgenie.strategies.impl;
 
-import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
-import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.util.List;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.geom.Ellipse2D;
-import java.util.List;
+import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
+import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class LineChartStrategy implements ChartGeneratorStrategy {
 
-    @Override
-    public JFreeChart generate(ChartConfiguration config) {
+  private static final Color BG_GREY = new Color(242, 242, 242);
+  private static final Color DARK_BLUE = new Color(30, 60, 150);
 
-        // 1. Populate Data
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        List<String> categories = config.getCategories();
-        List<Number> values = config.getValues();
+  @Override
+  public JFreeChart generate(ChartConfiguration config) {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    List<String> categories = config.getCategories();
+    List<Number> values = config.getValues();
 
-        if (categories != null && values != null) {
-            for (int i = 0; i < categories.size(); i++) {
-                if (i < values.size()) {
-                    dataset.addValue(values.get(i), "Trend Series", categories.get(i));
-                }
-            }
+    if (categories != null && values != null) {
+      for (int i = 0; i < categories.size(); i++) {
+        if (i < values.size()) {
+          dataset.addValue(values.get(i), "Trend", categories.get(i));
         }
-
-        // 2. Create Base Chart
-        JFreeChart chart = ChartFactory.createLineChart(
-                config.getTitle(),
-                "Period",       // X-Axis Label
-                "Value",        // Y-Axis Label
-                dataset,
-                PlotOrientation.VERTICAL,
-                false, true, false
-        );
-
-        // 3. customize Plot
-        CategoryPlot plot = chart.getCategoryPlot();
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
-        plot.setOutlineVisible(false);
-
-        // 4. Professional Styling (Thick Lines + Dots)
-        LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
-
-        // Enable "Shapes" (the dots at data points)
-        renderer.setDefaultShapesVisible(true);
-        renderer.setDrawOutlines(true);
-        renderer.setUseFillPaint(true);
-        renderer.setDefaultFillPaint(Color.WHITE); // White center for the dots
-
-        // Make the line thicker (3.0f pixels)
-        renderer.setSeriesStroke(0, new BasicStroke(3.0f));
-
-        // Set Color (Appian Blue)
-        renderer.setSeriesPaint(0, new Color(30, 60, 150));
-
-        // Set Shape size (Circle)
-        renderer.setSeriesShape(0, new Ellipse2D.Double(-4.0, -4.0, 8.0, 8.0));
-
-        return chart;
+      }
     }
+
+    JFreeChart chart = ChartFactory.createLineChart(
+      config.getTitle(), "", "", dataset,
+      PlotOrientation.VERTICAL, false, true, false);
+
+    chart.setBackgroundPaint(BG_GREY);
+    chart.setBorderVisible(false);
+    chart.getTitle().setFont(new Font("Segoe UI", Font.BOLD, 18));
+    chart.getTitle().setBackgroundPaint(BG_GREY);
+
+    CategoryPlot plot = chart.getCategoryPlot();
+    plot.setBackgroundPaint(BG_GREY);
+    plot.setOutlineVisible(false);
+    plot.setRangeGridlinePaint(Color.WHITE);
+    plot.setDomainGridlinesVisible(false);
+
+    // Axis
+    CategoryAxis domainAxis = plot.getDomainAxis();
+    domainAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
+
+    NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+    rangeAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
+    rangeAxis.setAutoRangeIncludesZero(true);
+
+    // Renderer (Thick Lines)
+    LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
+    renderer.setSeriesPaint(0, DARK_BLUE);
+    renderer.setSeriesStroke(0, new BasicStroke(3.0f)); // Thick 3px line
+    renderer.setSeriesShapesVisible(0, true); // Show dots at data points
+
+    return chart;
+  }
 }

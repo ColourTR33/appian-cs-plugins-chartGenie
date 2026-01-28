@@ -36,6 +36,8 @@ dependencies {
     // Exclude Log4j to prevent conflicts with Appian
     exclude group: 'org.apache.logging.log4j'
   }
+
+  implementation 'com.google.code.gson:gson:2.8.9'
   implementation 'javax.xml.bind:jaxb-api:2.3.1'
   implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
   implementation 'javax.activation:activation:1.1.1'
@@ -137,6 +139,11 @@ tasks.register('runLocalTest', JavaExec) {
 
   // Ensure we can see the System.out.println logs
   standardOutput = System.out
+}
+
+tasks.register('runJsonTest', JavaExec) {
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'com.appiancs.plugins.chartgenie.test.JsonTestRunner'
 }
 
 task jacocoRootReport(type: JacocoReport) {

@@ -34,7 +34,7 @@ public class ColumnChartStrategy implements ChartGeneratorStrategy {
       dataset,
       PlotOrientation.VERTICAL, // Vertical = Column Chart
       false, // Legend
-      true, // Tooltips
+      false, // Tooltips
       false // URLs
     );
     StandardChartTheme.createJFreeTheme().apply(chart);

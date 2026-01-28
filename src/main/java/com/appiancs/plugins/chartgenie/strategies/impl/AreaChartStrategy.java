@@ -1,54 +1,69 @@
 package com.appiancs.plugins.chartgenie.strategies.impl;
 
-import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
-import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
+import java.awt.Color;
+import java.awt.Font;
+import java.util.List;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.AreaRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import java.awt.Color;
-import java.util.List;
+import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
+import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class AreaChartStrategy implements ChartGeneratorStrategy {
 
-    @Override
-    public JFreeChart generate(ChartConfiguration config) {
-        // 1. Populate Dataset
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        List<String> categories = config.getCategories();
-        List<Number> values = config.getValues();
+  private static final Color BG_GREY = new Color(242, 242, 242);
+  private static final Color CYAN_TRANSPARENT = new Color(0, 184, 212, 180); // Transparent Cyan
 
-        if (categories != null && values != null) {
-            for (int i = 0; i < categories.size(); i++) {
-                if (i < values.size()) {
-                    dataset.addValue(values.get(i), "Current Trend", categories.get(i));
-                }
-            }
+  @Override
+  public JFreeChart generate(ChartConfiguration config) {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    List<String> categories = config.getCategories();
+    List<Number> values = config.getValues();
+
+    if (categories != null && values != null) {
+      for (int i = 0; i < categories.size(); i++) {
+        if (i < values.size()) {
+          dataset.addValue(values.get(i), "Volume", categories.get(i));
         }
-
-        // 2. Create Chart
-        JFreeChart chart = ChartFactory.createAreaChart(
-                config.getTitle(),
-                "Period",             // X-Axis Label
-                "Volume",             // Y-Axis Label
-                dataset,
-                PlotOrientation.VERTICAL,
-                false, true, false
-        );
-
-        // 3. Style It (The "Appian" Look)
-        CategoryPlot plot = chart.getCategoryPlot();
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
-        plot.setOutlineVisible(false);
-
-        // Customize the Area Renderer (Transparency looks great on Area charts)
-        AreaRenderer renderer = (AreaRenderer) plot.getRenderer();
-        renderer.setSeriesPaint(0, new Color(30, 60, 150, 180)); // Blue with 180 alpha (transparency)
-
-        return chart;
+      }
     }
+
+    JFreeChart chart = ChartFactory.createAreaChart(
+      config.getTitle(), "", "", dataset,
+      PlotOrientation.VERTICAL, false, true, false);
+
+    chart.setBackgroundPaint(BG_GREY);
+    chart.setBorderVisible(false);
+    chart.getTitle().setFont(new Font("Segoe UI", Font.BOLD, 18));
+    chart.getTitle().setBackgroundPaint(BG_GREY);
+
+    CategoryPlot plot = chart.getCategoryPlot();
+    plot.setBackgroundPaint(BG_GREY);
+    plot.setOutlineVisible(false);
+    plot.setRangeGridlinePaint(Color.WHITE);
+    plot.setDomainGridlinesVisible(false);
+
+    // Axis
+    CategoryAxis domainAxis = plot.getDomainAxis();
+    domainAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
+    domainAxis.setLowerMargin(0.0); // Flush to edges
+    domainAxis.setUpperMargin(0.0);
+
+    NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+    rangeAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
+    rangeAxis.setAutoRangeIncludesZero(true);
+
+    // Renderer
+    AreaRenderer renderer = (AreaRenderer) plot.getRenderer();
+    renderer.setSeriesPaint(0, CYAN_TRANSPARENT);
+
+    return chart;
+  }
 }
