@@ -1,19 +1,104 @@
-<smart-service name="GenerateChartReport" key="GenerateChartReport"
-  class="com.appiancs.plugins.chartgenie.GenerateChartReport">
-  <description>Generates a Word report with charts from JSON</description>
-  <order-index>10</order-index>
-  <icon-id>DOC_GEN</icon-id>
+<appian-plugin key="com.appiancs.plugins.chartgenie" name="ChartGenie Services" version="1.0.0">
+  <plugin-info>
+    <description>A suite of services for generating charts and embedding them into Microsoft Word documents.</description>
+    <vendor name="Appian Customer Success" url="https://community.appian.com" />
+    <version>1.1.16</version>
+    <osgi-compliant>true</osgi-compliant>
+  </plugin-info>
 
-  <input-params>
-    <input-param name="jsonPayload" type="STRING" required="true" label="JSON Payload" />
-    <input-param name="templateDocument" type="DOCUMENT" required="true" label="Template Document" />
-    <input-param name="newDocumentName" type="STRING" required="true" label="New Document Name" />
-    <input-param name="saveInFolder" type="FOLDER" required="true" label="Save In Folder" />
-  </input-params>
+  <smart-service name="Generate Chart Report" key="GenerateChartReport"
+    class="com.appiancs.plugins.chartgenie.GenerateChartReport">
+    <description>Generates a Microsoft Word report with embedded charts based on a JSON payload.</description>
+    <order-index>10</order-index>
+    <icon-id>DOC_GEN</icon-id>
 
-  <output-params>
-    <output-param name="newDocument" type="DOCUMENT" label="New Document" />
-    <output-param name="isError" type="BOOLEAN" label="Is Error" />
-    <output-param name="errorMessage" type="STRING" label="Error Message" />
-  </output-params>
-</smart-service>
+    <input-params>
+      <input-param name="jsonPayload" type="STRING" required="true" label="JSON Payload">
+        <description>The JSON configuration defining sections, data, and branding.</description>
+      </input-param>
+      <input-param name="templateDocument" type="DOCUMENT" required="true" label="Template Document">
+        <description>The base Word document (DOCX) to act as the template.</description>
+      </input-param>
+      <input-param name="newDocumentName" type="STRING" required="true" label="New Document Name">
+        <description>The name of the generated file.</description>
+      </input-param>
+      <input-param name="saveInFolder" type="FOLDER" required="true" label="Save In Folder">
+        <description>The Appian Folder where the document will be saved.</description>
+      </input-param>
+
+      <input-param name="includeQrCode" type="BOOLEAN" required="false" label="Include QR Code">
+        <description>Flag to append a QR code to the report.</description>
+      </input-param>
+      <input-param name="qrCodeUrl" type="STRING" required="false" label="QR Code URL">
+        <description>The URL or text to encode in the QR code.</description>
+      </input-param>
+    </input-params>
+
+    <output-params>
+      <output-param name="newDocument" type="DOCUMENT" label="New Document" />
+      <output-param name="errorOccurred" type="BOOLEAN" label="Error Occurred" />
+      <output-param name="errorMessage" type="STRING" label="Error Message" />
+    </output-params>
+  </smart-service>
+
+
+  <smart-service name="Generate Chart Image" key="GenerateChartImage"
+    class="com.appiancs.plugins.chartgenie.GenerateChartImage">
+    <description>Generates a standalone PNG chart image and saves it to Appian.</description>
+    <order-index>20</order-index>
+    <icon-id>DOC_GEN</icon-id>
+
+    <input-params>
+      <input-param name="chartType" type="STRING" required="true" label="Chart Type">
+        <description>Type of chart (BAR, PIE, LINE, AREA, DONUT).</description>
+      </input-param>
+      <input-param name="dataCategories" type="STRING" required="true" array="true" label="Categories">
+        <description>List of text labels for the X-axis or Pie slices.</description>
+      </input-param>
+      <input-param name="dataValues" type="DOUBLE" required="true" array="true" label="Values">
+        <description>List of numerical values corresponding to the categories.</description>
+      </input-param>
+      <input-param name="primaryColor" type="STRING" required="false" label="Primary Color">
+        <description>Hex code (e.g., 303030) for the main chart color.</description>
+      </input-param>
+      <input-param name="targetFolder" type="FOLDER" required="true" label="Target Folder" />
+      <input-param name="targetName" type="STRING" required="true" label="Target Name" />
+    </input-params>
+
+    <output-params>
+      <output-param name="newChartDocument" type="DOCUMENT" label="New Chart Image" />
+      <output-param name="errorOccurred" type="BOOLEAN" label="Error Occurred" />
+      <output-param name="errorMessage" type="STRING" label="Error Message" />
+    </output-params>
+  </smart-service>
+
+
+  <smart-service name="Insert Chart Into Document" key="InsertChartIntoDocument"
+    class="com.appiancs.plugins.chartgenie.InsertChartIntoDocument">
+    <description>Inserts a chart image into a Word document (Creating new or Appending).</description>
+    <order-index>30</order-index>
+    <icon-id>DOC_GEN</icon-id>
+
+    <input-params>
+      <input-param name="chartImage" type="DOCUMENT" required="true" label="Chart Image">
+        <description>The PNG image document to insert.</description>
+      </input-param>
+      <input-param name="existingDocument" type="DOCUMENT" required="false" label="Existing Document">
+        <description>Optional. If provided, the chart is appended to this document.</description>
+      </input-param>
+      <input-param name="targetFolder" type="FOLDER" required="false" label="Target Folder">
+        <description>Required if creating a new document.</description>
+      </input-param>
+      <input-param name="targetName" type="STRING" required="false" label="Target Name">
+        <description>Required if creating a new document.</description>
+      </input-param>
+    </input-params>
+
+    <output-params>
+      <output-param name="updatedDocument" type="DOCUMENT" label="Updated Document" />
+      <output-param name="errorOccurred" type="BOOLEAN" label="Error Occurred" />
+      <output-param name="errorMessage" type="STRING" label="Error Message" />
+    </output-params>
+  </smart-service>
+
+</appian-plugin>

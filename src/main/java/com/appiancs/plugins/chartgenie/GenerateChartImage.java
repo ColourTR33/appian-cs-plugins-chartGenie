@@ -1,156 +1,107 @@
 package com.appiancs.plugins.chartgenie;
 
 import java.io.File;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
-
-import com.appiancorp.suiteapi.content.ContentConstants;
 import com.appiancorp.suiteapi.content.ContentService;
-import com.appiancorp.suiteapi.knowledge.Document;
 import com.appiancorp.suiteapi.process.exceptions.SmartServiceException;
 import com.appiancorp.suiteapi.process.framework.Input;
-import com.appiancorp.suiteapi.process.framework.Order;
 import com.appiancorp.suiteapi.process.framework.Required;
-import com.appiancorp.suiteapi.process.framework.Unattended;
-import com.appiancorp.suiteapi.type.Type;
+import com.appiancorp.suiteapi.process.framework.SmartServiceContext;
+import com.appiancorp.suiteapi.process.palette.PaletteInfo;
 import com.appiancs.plugins.chartgenie.base.BaseSmartService;
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.service.ChartGenerationService;
+import com.appiancs.plugins.chartgenie.utils.DocumentUtils;
 
-@Unattended
-@Order({
-  "ChartType",
-  "DataCategories",
-  "DataValues",
-  "PrimaryColour",
-  "SecondaryColour",
-  "TargetFolder",
-  "TargetName"
-})
+@PaletteInfo(paletteCategory = "Document Generation", palette = "ChartGenie Services")
 public class GenerateChartImage extends BaseSmartService {
-  private static final Logger LOG = Logger.getLogger(GenerateChartImage.class);
 
-  // --- Inputs ---
   private String chartType;
-  private List<String> dataCategories;
-  private List<Number> dataValues;
-  private String primaryColour;
-  private String secondaryColour;
-  private Long targetFolder;
+  private String[] dataCategories;
+  private Double[] dataValues;
+  private String primaryColor;
+  private Long targetFolderId;
   private String targetName;
+  private Long newChartDocumentId;
 
-  // --- Output ---
-  private Long newChartDocument;
-
-  public GenerateChartImage(ContentService cs) {
-    super(cs, LOG);
+  public GenerateChartImage(SmartServiceContext context, ContentService contentService) {
+    super(contentService);
   }
 
   @Override
   public void run() throws SmartServiceException {
-    ChartConfiguration config = new ChartConfiguration();
-
-    // 1. Map Inputs to Configuration
-    // Note: We do not pass 'cs' to config anymore, as the Service is now "Pure"
-    config.setChartType(this.chartType);
-    config.setDataFromLists(this.dataCategories, this.dataValues);
-    config.setHexColors(Arrays.asList(this.primaryColour, this.secondaryColour));
-    config.setWidth(600); // Default or add as input
-    config.setHeight(400); // Default or add as input
-
-    // 2. Call the "Pure" Service
-    ChartGenerationService service = new ChartGenerationService();
     File chartFile = null;
 
     try {
-      // This generates the file on disk (C:/Temp/...) without knowing about Appian
+      log.info("Starting Single Chart Image Generation...");
+
+      ChartConfiguration config = new ChartConfiguration();
+      config.setChartType(chartType);
+
+      if (dataCategories != null)
+        config.setCategories(Arrays.asList(dataCategories));
+      if (dataValues != null) {
+        List<Number> valuesList = Arrays.stream(dataValues).collect(Collectors.toList());
+        config.setValues(valuesList);
+      }
+
+      config.setPrimaryColor(primaryColor);
+      config.setWidth(800);
+      config.setHeight(600);
+      config.setTitle(targetName);
+
+      ChartGenerationService service = new ChartGenerationService();
       chartFile = service.generateChartImage(config);
 
-      // 3. Handle Appian Upload
-      Document doc = new Document();
-      doc.setName(this.targetName);
-      doc.setExtension("png");
-      doc.setParent(this.targetFolder);
+      // Upload using Utility
+      this.newChartDocumentId = DocumentUtils.uploadDocument(contentService, chartFile, targetName, targetFolderId, "png");
 
-      // Create the object in Appian
-      this.newChartDocument = cs.create(doc, ContentConstants.UNIQUE_NONE);
-
-      // Get the object back to write to its stream
-      Document uploadedDoc = cs.download(this.newChartDocument, ContentConstants.VERSION_CURRENT, false)[0];
-
-      try (OutputStream out = uploadedDoc.getOutputStream()) {
-        Files.copy(chartFile.toPath(), out);
-      }
+      log.info("Chart Image Created Successfully. ID: " + newChartDocumentId);
 
     } catch (Exception e) {
-      handleError(e, "Failed to generate chart image");
+      handleException(e, "Failed to generate chart image");
+      this.newChartDocumentId = null;
     } finally {
-      // Cleanup temp file
-      if (chartFile != null && chartFile.exists()) {
+      if (chartFile != null)
         chartFile.delete();
-      }
     }
   }
 
-  // --- Setter Methods (Appian Inputs) ---
-
   @Input(required = Required.ALWAYS)
-  @com.appiancorp.suiteapi.common.Name("ChartType")
-  @Type(name = "Text", namespace = "http://www.appian.com/ae/types/2009")
-  public void setChartType(String val) {
-    this.chartType = val;
+  public void setChartType(String chartType) {
+    this.chartType = chartType;
   }
 
   @Input(required = Required.ALWAYS)
-  @com.appiancorp.suiteapi.common.Name("DataCategories")
-  @Type(name = "Text?list", namespace = "http://www.appian.com/ae/types/2009")
-  public void setDataCategories(List<String> val) {
-    this.dataCategories = val;
+  public void setDataCategories(String[] dataCategories) {
+    this.dataCategories = dataCategories;
   }
 
   @Input(required = Required.ALWAYS)
-  @com.appiancorp.suiteapi.common.Name("DataValues")
-  @Type(name = "Number?list", namespace = "http://www.appian.com/ae/types/2009")
-  public void setDataValues(List<Number> val) {
-    this.dataValues = val;
+  public void setDataValues(Double[] dataValues) {
+    this.dataValues = dataValues;
   }
 
   @Input(required = Required.OPTIONAL)
-  @com.appiancorp.suiteapi.common.Name("PrimaryColour")
-  @Type(name = "Text", namespace = "http://www.appian.com/ae/types/2009")
-  public void setPrimaryColour(String val) {
-    this.primaryColour = val;
+  public void setPrimaryColor(String primaryColor) {
+    this.primaryColor = primaryColor;
+  }
+
+  @Input(required = Required.ALWAYS)
+  public void setTargetFolder(Long targetFolderId) {
+    this.targetFolderId = targetFolderId;
+  }
+
+  @Input(required = Required.ALWAYS)
+  public void setTargetName(String targetName) {
+    this.targetName = targetName;
   }
 
   @Input(required = Required.OPTIONAL)
-  @com.appiancorp.suiteapi.common.Name("SecondaryColour")
-  @Type(name = "Text", namespace = "http://www.appian.com/ae/types/2009")
-  public void setSecondaryColour(String val) {
-    this.secondaryColour = val;
-  }
-
-  @Input(required = Required.ALWAYS)
-  @com.appiancorp.suiteapi.common.Name("TargetFolder")
-  @Type(name = "Integer", namespace = "http://www.appian.com/ae/types/2009")
-  public void setTargetFolder(Long val) {
-    this.targetFolder = val;
-  }
-
-  @Input(required = Required.ALWAYS)
-  @com.appiancorp.suiteapi.common.Name("TargetName")
-  @Type(name = "Text", namespace = "http://www.appian.com/ae/types/2009")
-  public void setTargetName(String val) {
-    this.targetName = val;
-  }
-
-  // --- Getter Method (Appian Output) ---
-
-  @com.appiancorp.suiteapi.common.Name("NewChartDocument")
   public Long getNewChartDocument() {
-    return newChartDocument;
+    return newChartDocumentId;
   }
 }

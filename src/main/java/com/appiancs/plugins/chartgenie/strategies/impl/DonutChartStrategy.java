@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.plot.RingPlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.general.DefaultPieDataset;
@@ -14,69 +15,137 @@ import org.jfree.data.general.DefaultPieDataset;
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
+/**
+ * Strategy to generate a Donut (Ring) Chart.
+ */
 public class DonutChartStrategy implements ChartGeneratorStrategy {
 
-  private static final Color BG_GREY = new Color(242, 242, 242); // Matches Sidebar F2F2F2
-  private static final Color[] PALETTE = {
-    new Color(30, 60, 150), // Dark Blue
-    new Color(0, 184, 212), // Cyan
-    new Color(160, 160, 160) // Grey
-  };
+  // Defaults
+  private static final Color COLOR_BG_DEFAULT = Color.WHITE;
+  private static final Color COLOR_PRIMARY_DEFAULT = new Color(30, 60, 150); // Deep Blue
+
+  private static final String DEFAULT_FONT = "SansSerif";
+
+  // Layout Constants
+  private static final int FONT_SIZE_TITLE = 18;
+  private static final int FONT_SIZE_LEGEND = 12;
+  private static final float SEPARATOR_WIDTH = 2.0f;
+  private static final double RING_DEPTH = 0.35; // 35% thickness
 
   @Override
   public JFreeChart generate(ChartConfiguration config) {
+    // 1. Prepare Dataset
     DefaultPieDataset dataset = new DefaultPieDataset();
     List<String> categories = config.getCategories();
     List<Number> values = config.getValues();
 
     if (categories != null && values != null) {
-      for (int i = 0; i < categories.size(); i++) {
-        if (i < values.size())
+      int size = Math.min(categories.size(), values.size());
+      for (int i = 0; i < size; i++) {
+        if (values.get(i) != null) {
           dataset.setValue(categories.get(i), values.get(i));
+        }
       }
     }
 
+    // 2. Create Chart
     JFreeChart chart = ChartFactory.createRingChart(
-      config.getTitle(), dataset, true, true, false);
+      config.getTitle(),
+      dataset,
+      true, // Legend
+      true, // Tooltips
+      false // URLs
+    );
 
-    // 1. BACKGROUND & BORDER
-    chart.setBackgroundPaint(BG_GREY);
-    chart.setBorderVisible(false); // No outer box
+    // 3. Apply Global Styling
+    chart.setBackgroundPaint(COLOR_BG_DEFAULT);
+    chart.setBorderVisible(false);
 
-    // 2. TITLE
+    // Resolve Font
+    String fontName = (config.getFontFamily() != null) ? config.getFontFamily() : DEFAULT_FONT;
+
+    // Title
     TextTitle title = chart.getTitle();
-    title.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Larger, cleaner
+    title.setFont(new Font(fontName, Font.BOLD, FONT_SIZE_TITLE));
     title.setPaint(Color.BLACK);
-    title.setBackgroundPaint(BG_GREY); // Ensure title matches bg
+    title.setBackgroundPaint(COLOR_BG_DEFAULT);
 
-    // 3. PLOT STYLING (The Donut)
+    // 4. Plot Styling
     RingPlot plot = (RingPlot) chart.getPlot();
-    plot.setBackgroundPaint(BG_GREY);
+    plot.setBackgroundPaint(COLOR_BG_DEFAULT);
     plot.setOutlineVisible(false);
-    plot.setShadowPaint(null);
+    plot.setShadowPaint(null); // Flat design (no shadow)
+    plot.setSectionDepth(RING_DEPTH); // Thicker ring for modern look
 
-    // Thicker Ring (0.35 = 35% of radius)
-    plot.setSectionDepth(0.35);
+    // Separators
+    plot.setSeparatorPaint(Color.WHITE);
+    plot.setSeparatorStroke(new BasicStroke(SEPARATOR_WIDTH));
 
-    // Remove separate labels (Too messy for sidebar)
+    // Hide labels on the chart itself
     plot.setLabelGenerator(null);
 
-    // White separator lines between slices
-    plot.setSeparatorPaint(Color.WHITE);
-    plot.setSeparatorStroke(new BasicStroke(2.0f));
+    // 5. Generate Palette & Apply Colors
+    Color primaryColor = decodeColor(config.getPrimaryColor(), COLOR_PRIMARY_DEFAULT);
+    Color[] palette = generateMonochromaticPalette(primaryColor, dataset.getItemCount());
 
-    // 4. COLORS
     for (int i = 0; i < dataset.getItemCount(); i++) {
-      plot.setSectionPaint(dataset.getKey(i), PALETTE[i % PALETTE.length]);
+      Comparable key = dataset.getKey(i);
+      plot.setSectionPaint(key, palette[i % palette.length]);
     }
 
-    // 5. LEGEND
+    // 6. Legend Styling
     if (chart.getLegend() != null) {
-      chart.getLegend().setBackgroundPaint(BG_GREY);
-      chart.getLegend().setItemFont(new Font("Segoe UI", Font.PLAIN, 12));
-      chart.getLegend().setFrame(org.jfree.chart.block.BlockBorder.NONE);
+      chart.getLegend().setBackgroundPaint(COLOR_BG_DEFAULT);
+      chart.getLegend().setItemFont(new Font(fontName, Font.PLAIN, FONT_SIZE_LEGEND));
+      chart.getLegend().setFrame(BlockBorder.NONE);
     }
 
     return chart;
+  }
+
+  /**
+   * Generates a monochromatic palette (shades of the primary color).
+   */
+  private Color[] generateMonochromaticPalette(Color base, int count) {
+    if (count <= 0) {
+      return new Color[] { base };
+    }
+
+    Color[] palette = new Color[count];
+    palette[0] = base;
+
+    for (int i = 1; i < count; i++) {
+      if (i == count - 1 && count > 2) {
+        palette[i] = Color.LIGHT_GRAY;
+      } else {
+        palette[i] = lighten(palette[i - 1], 0.2);
+      }
+    }
+    return palette;
+  }
+
+  private Color lighten(Color color, double fraction) {
+    int r = color.getRed();
+    int g = color.getGreen();
+    int b = color.getBlue();
+    int alpha = color.getAlpha();
+
+    int rNew = (int) Math.min(255, r + (255 - r) * fraction);
+    int gNew = (int) Math.min(255, g + (255 - g) * fraction);
+    int bNew = (int) Math.min(255, b + (255 - b) * fraction);
+
+    return new Color(rNew, gNew, bNew, alpha);
+  }
+
+  private Color decodeColor(String hexStr, Color fallback) {
+    if (hexStr == null || hexStr.isEmpty()) {
+      return fallback;
+    }
+    try {
+      String cleanHex = hexStr.startsWith("#") ? hexStr : "#" + hexStr;
+      return Color.decode(cleanHex);
+    } catch (NumberFormatException e) {
+      return fallback;
+    }
   }
 }

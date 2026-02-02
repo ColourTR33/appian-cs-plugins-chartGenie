@@ -16,54 +16,103 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
+/**
+ * Strategy to generate an Area Chart.
+ */
 public class AreaChartStrategy implements ChartGeneratorStrategy {
 
-  private static final Color BG_GREY = new Color(242, 242, 242);
-  private static final Color CYAN_TRANSPARENT = new Color(0, 184, 212, 180); // Transparent Cyan
+  // Defaults
+  private static final Color COLOR_BG_DEFAULT = new Color(255, 255, 255);
+  private static final Color COLOR_GRIDLINES = new Color(220, 220, 220);
+  private static final Color COLOR_PRIMARY_DEFAULT = new Color(0, 184, 212);
+
+  private static final String DEFAULT_FONT = "SansSerif";
+  private static final String DEFAULT_SERIES_NAME = "Data";
+
+  // Layout
+  private static final int FONT_SIZE_TITLE = 18;
+  private static final int FONT_SIZE_AXIS = 10;
+  private static final int ALPHA_TRANSPARENCY = 180;
 
   @Override
   public JFreeChart generate(ChartConfiguration config) {
+    // 1. Prepare Dataset
     DefaultCategoryDataset dataset = new DefaultCategoryDataset();
     List<String> categories = config.getCategories();
     List<Number> values = config.getValues();
 
+    String seriesName = (config.getSeriesName() != null && !config.getSeriesName().isEmpty())
+      ? config.getSeriesName()
+      : DEFAULT_SERIES_NAME;
+
     if (categories != null && values != null) {
-      for (int i = 0; i < categories.size(); i++) {
-        if (i < values.size()) {
-          dataset.addValue(values.get(i), "Volume", categories.get(i));
-        }
+      int size = Math.min(categories.size(), values.size());
+      for (int i = 0; i < size; i++) {
+        dataset.addValue(values.get(i), seriesName, categories.get(i));
       }
     }
 
+    // 2. Create Chart
     JFreeChart chart = ChartFactory.createAreaChart(
-      config.getTitle(), "", "", dataset,
-      PlotOrientation.VERTICAL, false, true, false);
+      config.getTitle(),
+      "",
+      "",
+      dataset,
+      PlotOrientation.VERTICAL,
+      false,
+      true,
+      false);
 
-    chart.setBackgroundPaint(BG_GREY);
+    // 3. Global Styling
+    chart.setBackgroundPaint(COLOR_BG_DEFAULT);
     chart.setBorderVisible(false);
-    chart.getTitle().setFont(new Font("Segoe UI", Font.BOLD, 18));
-    chart.getTitle().setBackgroundPaint(BG_GREY);
 
+    // Resolve Font
+    String fontName = (config.getFontFamily() != null) ? config.getFontFamily() : DEFAULT_FONT;
+
+    // Title
+    chart.getTitle().setFont(new Font(fontName, Font.BOLD, FONT_SIZE_TITLE));
+    chart.getTitle().setBackgroundPaint(COLOR_BG_DEFAULT);
+
+    // 4. Plot Styling
     CategoryPlot plot = chart.getCategoryPlot();
-    plot.setBackgroundPaint(BG_GREY);
+    plot.setBackgroundPaint(COLOR_BG_DEFAULT);
     plot.setOutlineVisible(false);
-    plot.setRangeGridlinePaint(Color.WHITE);
+    plot.setRangeGridlinePaint(COLOR_GRIDLINES);
     plot.setDomainGridlinesVisible(false);
 
     // Axis
     CategoryAxis domainAxis = plot.getDomainAxis();
-    domainAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
-    domainAxis.setLowerMargin(0.0); // Flush to edges
+    domainAxis.setTickLabelFont(new Font(fontName, Font.PLAIN, FONT_SIZE_AXIS));
+    domainAxis.setLowerMargin(0.0);
     domainAxis.setUpperMargin(0.0);
 
     NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-    rangeAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
+    rangeAxis.setTickLabelFont(new Font(fontName, Font.PLAIN, FONT_SIZE_AXIS));
     rangeAxis.setAutoRangeIncludesZero(true);
 
-    // Renderer
+    // 5. Renderer
+    Color primaryColor = decodeColor(config.getPrimaryColor(), COLOR_PRIMARY_DEFAULT);
+    Color transparentColor = new Color(primaryColor.getRed(),
+      primaryColor.getGreen(),
+      primaryColor.getBlue(),
+      ALPHA_TRANSPARENCY);
+
     AreaRenderer renderer = (AreaRenderer) plot.getRenderer();
-    renderer.setSeriesPaint(0, CYAN_TRANSPARENT);
+    renderer.setSeriesPaint(0, transparentColor);
 
     return chart;
+  }
+
+  private Color decodeColor(String hexStr, Color fallback) {
+    if (hexStr == null || hexStr.isEmpty()) {
+      return fallback;
+    }
+    try {
+      String cleanHex = hexStr.startsWith("#") ? hexStr : "#" + hexStr;
+      return Color.decode(cleanHex);
+    } catch (NumberFormatException e) {
+      return fallback;
+    }
   }
 }

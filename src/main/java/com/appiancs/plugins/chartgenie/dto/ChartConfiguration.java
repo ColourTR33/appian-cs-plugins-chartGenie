@@ -1,67 +1,30 @@
 package com.appiancs.plugins.chartgenie.dto;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
-@XmlRootElement(name = "chart-configuration")
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ChartConfiguration {
-
-  @XmlElement(name = "chart-type")
+  // Core Data
   private String chartType;
-
-  @XmlElement(name = "title")
   private String title;
-
-  @XmlElement(name = "width")
-  private int width;
-
-  @XmlElement(name = "height")
-  private int height;
-
-  // --- NEW FIELDS (For Local Test Runner) ---
-  @XmlElement(name = "categories")
   private List<String> categories;
-
-  @XmlElement(name = "values")
   private List<Number> values;
 
-  // --- LEGACY FIELDS (For Old Strategies) ---
-  @XmlTransient // transient means "don't try to save this to XML"
-  private transient Map<String, Double> dataPoints = new HashMap<>();
+  // Dimensions (Integer for null checks)
+  private Integer width;
+  private Integer height;
 
-  @XmlTransient
-  private transient Color primaryColor = new Color(30, 60, 150); // Default Blue
+  // Styling & Options
+  private String primaryColor;
+  private String seriesName;
+  private String fontFamily;
+  private String orientation;
+  private Boolean dataLabelsEnabled;
 
-  @XmlTransient
-  private transient List<String> hexColors = new ArrayList<>();
+  // NEW FIELD (Required for Service Class)
+  private String metrics;
 
-  // --- HELPER: Syncs the Lists (New) with the Map (Old) ---
-  // This ensures both parts of your code work together
-  public void setDataFromLists(List<String> cats, List<Number> vals) {
-    this.categories = cats;
-    this.values = vals;
+  // --- Getters and Setters ---
 
-    // Auto-fill the legacy map so old strategies work
-    this.dataPoints.clear();
-    if (cats != null && vals != null) {
-      for (int i = 0; i < cats.size(); i++) {
-        if (i < vals.size()) {
-          this.dataPoints.put(cats.get(i), vals.get(i).doubleValue());
-        }
-      }
-    }
-  }
-
-  // --- GETTERS & SETTERS ---
   public String getChartType() {
     return chartType;
   }
@@ -76,22 +39,6 @@ public class ChartConfiguration {
 
   public void setTitle(String title) {
     this.title = title;
-  }
-
-  public int getWidth() {
-    return width;
-  }
-
-  public void setWidth(int width) {
-    this.width = width;
-  }
-
-  public int getHeight() {
-    return height;
-  }
-
-  public void setHeight(int height) {
-    this.height = height;
   }
 
   public List<String> getCategories() {
@@ -110,28 +57,67 @@ public class ChartConfiguration {
     this.values = values;
   }
 
-  // --- LEGACY GETTERS (Fixes "cannot find symbol") ---
-  public Map<String, Double> getDataPoints() {
-    return dataPoints;
+  public Integer getWidth() {
+    return width;
   }
 
-  public void setDataPoints(Map<String, Double> dataPoints) {
-    this.dataPoints = dataPoints;
+  public void setWidth(Integer width) {
+    this.width = width;
   }
 
-  public Color getPrimaryColor() {
+  public Integer getHeight() {
+    return height;
+  }
+
+  public void setHeight(Integer height) {
+    this.height = height;
+  }
+
+  public String getPrimaryColor() {
     return primaryColor;
   }
 
-  public void setPrimaryColor(Color primaryColor) {
+  public void setPrimaryColor(String primaryColor) {
     this.primaryColor = primaryColor;
   }
 
-  public List<String> getHexColors() {
-    return hexColors;
+  public String getSeriesName() {
+    return seriesName;
   }
 
-  public void setHexColors(List<String> hexColors) {
-    this.hexColors = hexColors;
+  public void setSeriesName(String seriesName) {
+    this.seriesName = seriesName;
+  }
+
+  public String getFontFamily() {
+    return fontFamily;
+  }
+
+  public void setFontFamily(String fontFamily) {
+    this.fontFamily = fontFamily;
+  }
+
+  public String getOrientation() {
+    return orientation;
+  }
+
+  public void setOrientation(String orientation) {
+    this.orientation = orientation;
+  }
+
+  public Boolean getDataLabelsEnabled() {
+    return dataLabelsEnabled;
+  }
+
+  public void setDataLabelsEnabled(Boolean dataLabelsEnabled) {
+    this.dataLabelsEnabled = dataLabelsEnabled;
+  }
+
+  public String getMetrics() {
+    return metrics;
+  }
+
+  public void setMetrics(String metrics) {
+    this.metrics = metrics;
   }
 }

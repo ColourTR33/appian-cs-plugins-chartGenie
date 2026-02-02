@@ -1,141 +1,101 @@
 package com.appiancs.plugins.chartgenie;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.lang.reflect.Method;
-
-import org.apache.log4j.Logger;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import com.appiancorp.suiteapi.content.ContentConstants;
 import com.appiancorp.suiteapi.content.ContentService;
 import com.appiancorp.suiteapi.knowledge.Document;
 import com.appiancorp.suiteapi.process.exceptions.SmartServiceException;
-import com.appiancorp.suiteapi.process.framework.AppianSmartService;
 import com.appiancorp.suiteapi.process.framework.Input;
 import com.appiancorp.suiteapi.process.framework.Required;
 import com.appiancorp.suiteapi.process.framework.SmartServiceContext;
 import com.appiancorp.suiteapi.process.palette.PaletteInfo;
+import com.appiancs.plugins.chartgenie.base.BaseSmartService;
 import com.appiancs.plugins.chartgenie.dto.structure.ReportRequest;
-import com.appiancs.plugins.chartgenie.dto.structure.ReportSection;
-import com.appiancs.plugins.chartgenie.service.ChartGenerationService;
+import com.appiancs.plugins.chartgenie.dto.structure.ReportSettings;
 import com.appiancs.plugins.chartgenie.service.WordDocumentService;
+import com.appiancs.plugins.chartgenie.utils.DocumentUtils;
 import com.google.gson.Gson;
 
 @PaletteInfo(paletteCategory = "Document Generation", palette = "ChartGenie Services")
-public class GenerateChartReport extends AppianSmartService {
+public class GenerateChartReport extends BaseSmartService {
 
-  private static final Logger LOG = Logger.getLogger(GenerateChartReport.class);
-  private final ContentService contentService;
-
-  // Inputs
   private String jsonPayload;
   private Long templateDocumentId;
   private String newDocumentName;
   private Long saveInFolderId;
-
-  // Outputs
+  private Boolean includeQrCode;
+  private String qrCodeUrl;
   private Long newDocumentId;
-  private Boolean error = false;
-  private String errorMessage = "";
 
   public GenerateChartReport(SmartServiceContext context, ContentService contentService) {
-    super();
-    this.contentService = contentService;
+    super(contentService);
   }
 
   @Override
   public void run() throws SmartServiceException {
-    File workingFile = null;
-    File finalFile = null;
+    File tempTemplate = null;
+    File finalReport = null;
+
+    System.out.println("====== DEBUG: CHART GENIE STARTED ======");
 
     try {
-      LOG.info("Starting ChartGenie Report Generation...");
-
-      // 1. Parse JSON
+      System.out.println("====== DEBUG: Parsing JSON... Length: " + (jsonPayload != null ? jsonPayload.length() : "NULL"));
       Gson gson = new Gson();
       ReportRequest request = gson.fromJson(jsonPayload, ReportRequest.class);
 
-      // 2. Instantiate Services
+      if (request == null) {
+        System.out.println("====== DEBUG: FATAL - Request is NULL");
+        throw new IllegalArgumentException("JSON payload parsed to NULL.");
+      }
+
+      if (request.getSettings() == null)
+        request.setSettings(new ReportSettings());
+      if (this.includeQrCode != null)
+        request.getSettings().setQrCodeEnabled(this.includeQrCode);
+      if (this.qrCodeUrl != null)
+        request.getSettings().setQrUrl(this.qrCodeUrl);
+
+      if (request.getSections() != null) {
+        System.out.println("====== DEBUG: Sections found: " + request.getSections().size());
+      }
+
+      System.out.println("====== DEBUG: Downloading Template ID: " + templateDocumentId);
+      Document appianDoc = contentService.download(templateDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
+      tempTemplate = File.createTempFile("genie_template_", ".docx");
+      try (InputStream in = appianDoc.getInputStream()) {
+        Files.copy(in, tempTemplate.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      }
+
+      System.out.println("====== DEBUG: Calling WordDocumentService...");
       WordDocumentService wordService = new WordDocumentService();
-      ChartGenerationService chartService = new ChartGenerationService();
+      finalReport = wordService.generateReport(tempTemplate, request.getSettings(), request.getSections());
 
-      // 3. Get Template Stream
-      Document[] docs = contentService.download(templateDocumentId, ContentConstants.VERSION_CURRENT, false);
-      if (docs == null || docs.length == 0) {
-        throw new Exception("Template document " + templateDocumentId + " could not be found or downloaded.");
-      }
+      System.out.println("====== DEBUG: Generation Complete. File Size: " + finalReport.length());
 
-      // 4. Create Base Document
-      try (InputStream templateStream = docs[0].getInputStream()) {
-        workingFile = wordService.createBaseDocument(templateStream);
-      }
-
-      // 5. Apply Global Headers
-      if (request.getDocumentSettings() != null) {
-        workingFile = wordService.applyGlobalHeaderFooter(workingFile, request.getDocumentSettings());
-      }
-
-      // 6. Loop through Sections
-      for (ReportSection section : request.getContent()) {
-        switch (section.getType()) {
-          case SIDEBAR_LAYOUT:
-            workingFile = wordService.appendSidebarLayout(
-              workingFile,
-              request.getDocumentSettings(),
-              section.getLeftContent(),
-              section.getRightContent(),
-              chartService);
-            break;
-          case PAGE_BREAK:
-            workingFile = wordService.addPageBreak(workingFile);
-            break;
-        }
-      }
-      finalFile = workingFile;
-
-      // 7. Upload Result to Appian
-      Document doc = new Document();
-      doc.setName(newDocumentName);
-      doc.setParent(saveInFolderId);
-      doc.setExtension("docx");
-
-      // A. Create the document shell (returns ID)
-      newDocumentId = contentService.create(doc, ContentConstants.UNIQUE_NONE);
-
-      // B. Prepare Doc object for version creation
-      doc.setId(newDocumentId);
-
-      try (FileInputStream fis = new FileInputStream(finalFile)) {
-
-        // --- FIX: Use Reflection to set Input Stream ---
-        // This bypasses the compiler error if the SDK jar is missing the method signature
-        try {
-          Method setInputStreamMethod = doc.getClass().getMethod("setInputStream", InputStream.class);
-          setInputStreamMethod.invoke(doc, fis);
-        } catch (Exception reflectEx) {
-          LOG.error("Reflection failed for setInputStream: " + reflectEx.getMessage());
-          throw reflectEx;
-        }
-
-        // C. Create Version (commits the content)
-        // '1' = Major Version (VERSION_OPTION_MAJOR)
-        contentService.createVersion(doc, 1);
-      }
-
-      LOG.info("Report Generation Successful. Doc ID: " + newDocumentId);
-      this.error = false;
-      this.errorMessage = null;
+      this.newDocumentId = DocumentUtils.uploadDocument(contentService, finalReport, newDocumentName, saveInFolderId, "docx");
+      System.out.println("====== DEBUG: Upload Complete. ID: " + newDocumentId);
 
     } catch (Exception e) {
-      LOG.error("Error in ChartGenie: " + e.getMessage(), e);
-      this.error = true;
-      this.errorMessage = "ChartGenie Failure: " + e.getMessage();
-      this.newDocumentId = null;
+      System.out.println("====== DEBUG: EXCEPTION CAUGHT IN RUN ======");
+      e.printStackTrace();
+      handleException(e, "Failed to generate chart report");
+    } finally {
+      if (tempTemplate != null)
+        try {
+          Files.delete(tempTemplate.toPath());
+        } catch (Exception ignored) {
+        }
+      if (finalReport != null)
+        try {
+          Files.delete(finalReport.toPath());
+        } catch (Exception ignored) {
+        }
     }
   }
-
-  // --- Inputs ---
 
   @Input(required = Required.ALWAYS)
   public void setJsonPayload(String jsonPayload) {
@@ -157,20 +117,18 @@ public class GenerateChartReport extends AppianSmartService {
     this.saveInFolderId = saveInFolderId;
   }
 
-  // --- Outputs ---
+  @Input(required = Required.OPTIONAL)
+  public void setIncludeQrCode(Boolean includeQrCode) {
+    this.includeQrCode = includeQrCode;
+  }
+
+  @Input(required = Required.OPTIONAL)
+  public void setQrCodeUrl(String qrCodeUrl) {
+    this.qrCodeUrl = qrCodeUrl;
+  }
 
   @Input(required = Required.OPTIONAL)
   public Long getNewDocument() {
     return newDocumentId;
-  }
-
-  @Input(required = Required.OPTIONAL)
-  public Boolean getIsError() {
-    return error;
-  }
-
-  @Input(required = Required.OPTIONAL)
-  public String getErrorMessage() {
-    return errorMessage;
   }
 }

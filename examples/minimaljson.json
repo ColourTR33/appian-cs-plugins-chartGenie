@@ -1,0 +1,20 @@
+{
+  "settings": {
+    "outputFileName": "Simple_Test.docx"
+  },
+  "sections": [
+    {
+      "type": "HEADING",
+      "text": "Simple Test"
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "COLUMN",
+        "title": "Basic Column Chart",
+        "categories": ["A", "B", "C"],
+        "values": [10, 20, 30]
+      }
+    }
+  ]
+}

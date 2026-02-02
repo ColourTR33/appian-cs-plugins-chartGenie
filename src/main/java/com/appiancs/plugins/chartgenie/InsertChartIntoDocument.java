@@ -1,158 +1,137 @@
 package com.appiancs.plugins.chartgenie;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import org.apache.log4j.Logger;
+import org.apache.poi.util.Units;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 
 import com.appiancorp.suiteapi.content.ContentConstants;
 import com.appiancorp.suiteapi.content.ContentService;
 import com.appiancorp.suiteapi.knowledge.Document;
 import com.appiancorp.suiteapi.process.exceptions.SmartServiceException;
 import com.appiancorp.suiteapi.process.framework.Input;
-import com.appiancorp.suiteapi.process.framework.Order;
 import com.appiancorp.suiteapi.process.framework.Required;
-import com.appiancorp.suiteapi.process.framework.Unattended;
-import com.appiancorp.suiteapi.type.Type;
+import com.appiancorp.suiteapi.process.framework.SmartServiceContext;
+import com.appiancorp.suiteapi.process.palette.PaletteInfo;
 import com.appiancs.plugins.chartgenie.base.BaseSmartService;
-import com.appiancs.plugins.chartgenie.service.WordDocumentService;
+import com.appiancs.plugins.chartgenie.utils.DocumentUtils;
 
-@Unattended
-@Order({
-  "ChartImage",
-  "ExistingDocument",
-  "TargetFolder",
-  "TargetName"
-})
+@PaletteInfo(paletteCategory = "Document Generation", palette = "ChartGenie Services")
 public class InsertChartIntoDocument extends BaseSmartService {
-  private static final Logger LOG = Logger.getLogger(InsertChartIntoDocument.class);
 
-  // --- Inputs ---
   private Long chartImageId;
-  private Long existingDocumentId; // Optional: If present, we append. If null, we create.
-  private Long targetFolder; // Only needed if creating new
-  private String targetName; // Only needed if creating new
-
-  // --- Output ---
+  private Long existingDocumentId;
+  private Long targetFolderId;
+  private String targetName;
   private Long updatedDocumentId;
 
-  public InsertChartIntoDocument(ContentService cs) {
-    super(cs, LOG);
+  public InsertChartIntoDocument(SmartServiceContext context, ContentService contentService) {
+    super(contentService);
   }
 
   @Override
   public void run() throws SmartServiceException {
-    WordDocumentService service = new WordDocumentService();
     File tempImage = null;
     File tempWordInput = null;
     File resultFile = null;
 
     try {
-      // 1. Download Input Image (From Appian to Temp File)
-      Document imgDoc = cs.download(chartImageId, ContentConstants.VERSION_CURRENT, false)[0];
-      tempImage = File.createTempFile("input_chart_", ".png");
+      log.info("Starting InsertChartIntoDocument...");
 
+      if (chartImageId == null)
+        throw new IllegalArgumentException("Chart Image is required.");
+      if (existingDocumentId == null && (targetFolderId == null || targetName == null)) {
+        throw new IllegalArgumentException("If no Existing Document is provided, Target Folder and Name are required.");
+      }
+
+      Document imgDoc = contentService.download(chartImageId, ContentConstants.VERSION_CURRENT, false)[0];
+      tempImage = File.createTempFile("input_chart_", ".png");
       try (InputStream in = imgDoc.getInputStream()) {
         Files.copy(in, tempImage.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
 
-      // 2. Execute Logic (Existing vs New)
+      tempWordInput = File.createTempFile("temp_word_input_", ".docx");
       if (existingDocumentId != null) {
-        // CASE A: Append to Existing Document
-        Document wordDoc = cs.download(existingDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
-        tempWordInput = File.createTempFile("temp_input_doc_", ".docx");
-
+        Document wordDoc = contentService.download(existingDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
         try (InputStream in = wordDoc.getInputStream()) {
           Files.copy(in, tempWordInput.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
-
-        // Call Pure Service
-        resultFile = service.appendChartToDocument(tempWordInput, tempImage);
-
       } else {
-        // CASE B: Create New Document
-        // Call Pure Service
-        resultFile = service.createDocumentWithChart(tempImage);
+        try (XWPFDocument doc = new XWPFDocument(); FileOutputStream out = new FileOutputStream(tempWordInput)) {
+          doc.write(out);
+        }
       }
 
-      // 3. Upload Result (The Plumbing)
+      resultFile = File.createTempFile("result_doc_", ".docx");
+      insertImage(tempWordInput, tempImage, resultFile);
+
+      // Upload using Utility
       if (existingDocumentId == null) {
-        // Upload as NEW Document
-        Document newDoc = new Document();
-        newDoc.setName(targetName);
-        newDoc.setExtension("docx");
-        newDoc.setParent(targetFolder);
-
-        this.updatedDocumentId = cs.create(newDoc, ContentConstants.UNIQUE_NONE);
-
-        Document finalDoc = cs.download(this.updatedDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
-        try (OutputStream out = finalDoc.getOutputStream()) {
-          Files.copy(resultFile.toPath(), out);
-        }
-
+        this.updatedDocumentId = DocumentUtils.uploadDocument(contentService, resultFile, targetName, targetFolderId, "docx");
       } else {
-        // Upload as NEW VERSION of Existing Document
-        Document versionDoc = cs.download(existingDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
-
-        // Getting OutputStream on an existing doc automatically creates a new version in Appian
-        try (OutputStream out = versionDoc.getOutputStream()) {
-          Files.copy(resultFile.toPath(), out);
-        }
+        DocumentUtils.uploadNewVersion(contentService, resultFile, existingDocumentId);
         this.updatedDocumentId = existingDocumentId;
       }
 
+      log.info("Document updated successfully: " + updatedDocumentId);
+
     } catch (Exception e) {
-      handleError(e, "Error inserting chart into document");
+      handleException(e, "Error inserting chart into document");
     } finally {
-      // Cleanup
-      deleteQuietly(tempImage);
-      deleteQuietly(tempWordInput);
-      deleteQuietly(resultFile);
+      if (tempImage != null)
+        tempImage.delete();
+      if (tempWordInput != null)
+        tempWordInput.delete();
+      if (resultFile != null)
+        resultFile.delete();
     }
   }
 
-  private void deleteQuietly(File f) {
-    if (f != null && f.exists()) {
-      f.delete();
+  private void insertImage(File inputDoc, File imageFile, File outputDoc) throws Exception {
+    try (FileInputStream fis = new FileInputStream(inputDoc);
+      XWPFDocument doc = new XWPFDocument(fis);
+      FileInputStream imgIs = new FileInputStream(imageFile);
+      FileOutputStream fos = new FileOutputStream(outputDoc)) {
+
+      XWPFParagraph p = doc.createParagraph();
+      p.setAlignment(ParagraphAlignment.CENTER);
+      XWPFRun r = p.createRun();
+      if (doc.getBodyElements().size() > 1)
+        r.addBreak();
+      r.addPicture(imgIs, XWPFDocument.PICTURE_TYPE_PNG, imageFile.getName(), Units.toEMU(500), Units.toEMU(300));
+      doc.write(fos);
     }
   }
-
-  // --- Setter Methods (Appian Inputs) ---
 
   @Input(required = Required.ALWAYS)
-  @com.appiancorp.suiteapi.common.Name("ChartImage")
-  @Type(name = "Document", namespace = "http://www.appian.com/ae/types/2009")
-  public void setChartImage(Long val) {
-    this.chartImageId = val;
+  public void setChartImage(Long chartImageId) {
+    this.chartImageId = chartImageId;
   }
 
   @Input(required = Required.OPTIONAL)
-  @com.appiancorp.suiteapi.common.Name("ExistingDocument")
-  @Type(name = "Document", namespace = "http://www.appian.com/ae/types/2009")
-  public void setExistingDocument(Long val) {
-    this.existingDocumentId = val;
+  public void setExistingDocument(Long existingDocumentId) {
+    this.existingDocumentId = existingDocumentId;
   }
 
   @Input(required = Required.OPTIONAL)
-  @com.appiancorp.suiteapi.common.Name("TargetFolder")
-  @Type(name = "Integer", namespace = "http://www.appian.com/ae/types/2009")
-  public void setTargetFolder(Long val) {
-    this.targetFolder = val;
+  public void setTargetFolder(Long targetFolderId) {
+    this.targetFolderId = targetFolderId;
   }
 
   @Input(required = Required.OPTIONAL)
-  @com.appiancorp.suiteapi.common.Name("TargetName")
-  @Type(name = "Text", namespace = "http://www.appian.com/ae/types/2009")
-  public void setTargetName(String val) {
-    this.targetName = val;
+  public void setTargetName(String targetName) {
+    this.targetName = targetName;
   }
 
-  // --- Getter Method (Appian Output) ---
-
-  @com.appiancorp.suiteapi.common.Name("UpdatedDocument")
+  @Input(required = Required.OPTIONAL)
   public Long getUpdatedDocument() {
     return updatedDocumentId;
   }

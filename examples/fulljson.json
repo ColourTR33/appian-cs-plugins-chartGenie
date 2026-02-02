@@ -1,0 +1,121 @@
+{
+  "settings": {
+    "templateName": "Executive_Report_Template",
+    "outputFileName": "Q3_Performance_Report.docx",
+    "fontFamily": "Segoe UI",
+    "primaryColor": "1E3C96",
+    "headerTextColor": "666666",
+    "pageSize": "A4"
+  },
+  "sections": [
+    {
+      "type": "HEADING",
+      "text": "Executive Performance Summary - Q3 2025"
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "The following report details the sales performance, regional distribution, and trend analysis for the third quarter. All charts are generated dynamically using ChartGenie."
+    },
+    {
+      "type": "HEADING",
+      "text": "1. Regional Performance (Bar & Column)"
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "BAR",
+        "title": "Top Sales by Region (Horizontal)",
+        "categories": ["North America", "EMEA", "APAC", "LATAM"],
+        "values": [120, 95, 110, 45],
+        "width": 600,
+        "height": 350
+      }
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "COLUMN",
+        "title": "Monthly Revenue (Vertical)",
+        "categories": ["July", "August", "September"],
+        "values": [45000, 52000, 61000],
+        "primaryColor": "00B8D4",
+        "width": 600,
+        "height": 400
+      }
+    },
+    {
+      "type": "PAGE_BREAK"
+    },
+    {
+      "type": "HEADING",
+      "text": "2. Trends & Volume (Line & Area)"
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "LINE",
+        "title": "Customer Acquisition Trend",
+        "seriesName": "New Users",
+        "categories": ["Week 1", "Week 2", "Week 3", "Week 4"],
+        "values": [150, 180, 175, 210],
+        "width": 600,
+        "height": 300
+      }
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "AREA",
+        "title": "Server Load Capacity",
+        "seriesName": "CPU Usage %",
+        "categories": ["08:00", "12:00", "16:00", "20:00"],
+        "values": [20, 65, 85, 40],
+        "primaryColor": "D32F2F",
+        "width": 600,
+        "height": 300
+      }
+    },
+    {
+      "type": "HEADING",
+      "text": "3. Portfolio Distribution (Pie & Donut)"
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "PIE",
+        "title": "Product Mix",
+        "categories": ["License", "Services", "Support", "Training"],
+        "values": [60, 25, 10, 5],
+        "width": 500,
+        "height": 400
+      }
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "DONUT",
+        "title": "Budget Allocation",
+        "categories": ["R&D", "Marketing", "Sales", "Ops"],
+        "values": [40, 30, 20, 10],
+        "primaryColor": "2E7D32",
+        "width": 500,
+        "height": 400
+      }
+    },
+    {
+      "type": "HEADING",
+      "text": "4. Comparative Analysis"
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "STACKED",
+        "title": "Projected Growth (Stacked)",
+        "categories": ["Q1", "Q2", "Q3", "Q4"],
+        "values": [100, 150, 200, 250],
+        "width": 600,
+        "height": 400
+      }
+    }
+  ]
+}

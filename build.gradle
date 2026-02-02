@@ -37,13 +37,16 @@ dependencies {
     exclude group: 'org.apache.logging.log4j'
   }
 
+  implementation 'com.google.zxing:core:3.5.1'
+  implementation 'com.google.zxing:javase:3.5.1'
   implementation 'com.google.code.gson:gson:2.8.9'
   implementation 'javax.xml.bind:jaxb-api:2.3.1'
   implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
   implementation 'javax.activation:activation:1.1.1'
   implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
   def poiVersion = '5.5.1'
-  def log4jVersion = '2.24.1' // POI 5.x requires newer Log4j 2.x
+  def log4jVersion = '2.24.1'
+
 
   // 1. Core POI library
   implementation "org.apache.poi:poi:${poiVersion}"
