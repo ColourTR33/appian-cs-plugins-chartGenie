@@ -1,0 +1,320 @@
+##################################################
+############   STEP 1  - COPY INSTALLATION FILES  ############
+##################################################
+
+# copy files to server:
+# 1 - installation binary
+# 2 - configuration tool (.zip)
+# 3 - appian licenses
+
+# 4 - stop listeners accordding to set procedures
+# In order to avoid any issues with MQ Listener, we advise to temporarily disable MQ Listener before upgrading the Appian environment and turning it back on after the upgrade.
+
+# to do this:
+#   4.1.	Go to the application "COMM_Integration" --> search for the constant COMM_IN_C_isActiveMQListenerManager --> Set it to False --> SAVE.
+#   4.2.	Still in the application "COMM_Integration" --> go to the Monitor tab -->  filter by Process Status 'Active only' --> Search for MQListener
+#   4.3  Open each active instance and cancel it by clicking Modify --> Cancel Process --> Right click the middle node called 'Execute SP RELEASE LOCK' --> Choose Start.
+#   4.4.	Proceed with the Appian environment upgrade.
+#   4.5.	After the upgrade is complete, turn the MQ Listener back on in Appian. Go to the application "COMM_Integration", search for the constant COMM_IN_C_isActiveMQListenerManager. Set it to True and SAVE.
+#   4.6.	The Manager triggers new instances of the active MQ Listeners every 30 minutes, so the next time it runs the MQListeners will start.
+#          * To trigger the Manager PM manually access the application "COMM_Integration": Search for the Process Model 'COMM_IN_P_MQListenerManager' and open it.
+#          * Once open, go to File > Start Process for Debugging.
+
+
+
+
+##################################################
+############   STEP 2  - ACCESS TO FILES  ##################
+##################################################
+
+# set access to installation files
+chown -R "$(stat -c %U /COLO/appian):$(stat -c %G /COLO/appian)" /share/appian/install_binaries/
+chmod +x /share/appian/install_binaries/setupLinux64_*
+
+# switch to app user if logged in as root
+su - $(stat -c %U /COLO/appian)
+
+
+
+
+##################################################
+############   STEP 3  - SET VARIABLES  ###################
+##################################################
+
+APPIAN_HOME=/COLO/appian
+APP_SHARE=/share/appian
+APPIAN_REPO=$APP_SHARE/appianrepository
+APP_USER=$(stat -c %U $APPIAN_HOME)
+APP_GROUP=$(stat -c %G $APPIAN_HOME)
+
+# set currently installed version
+VER=$(cat $APPIAN_HOME/conf/build.info | sed -n 's/build\.version=//p' |  cut -d. -f1-2)
+echo $VER
+
+# set env name - IF ENV_NAME IS NOT CORRECT DO NOT CONTINUE
+f=$(basename $(find ${APPIAN_REPO}/conf -name "tomcatResources.xml*" | grep -v example))
+ENV_NAME=${f##*.}
+echo $ENV_NAME
+
+# set the installation binary path HERE
+INSTALL_BIN=$APP_SHARE/install_binaries/setupLinux64_appian-25.3.361.0.bin
+
+
+##################################################
+############   STEP 4  - STOP APPIAN AND BACKUP  EVERYTHING ###
+##################################################
+
+# STOP APPIAN SERVICES or USE APPADMIN
+/COLO/appian/tomcat/apache-tomcat/bin/stop-appserver.sh
+/COLO/appian/search-server/bin/stop.sh
+/COLO/appian/data-server/bin/stop.sh
+/COLO/appian/services/bin/stop.sh -p appian123 -c
+
+
+### backup DBs ###
+#appian_primary
+#appian_business
+#appian_business_colo_ro
+#appian_business_mtgl
+#appian_business_ea
+#appian_business_colo_onb
+#appian_business_arch
+#appian_business_ar
+#appian_business_pr
+
+### create snapshots + backup storage ###
+
+
+
+
+######################################################
+############   STEP 5  - SAVE OLD VERSION  AND INSTALL ############
+######################################################
+
+##  RUN ONCE
+if [[ ! -d ${APPIAN_REPO}-${VER} ]] ; then
+	mv ${APPIAN_REPO} ${APPIAN_REPO}-${VER}
+	mkdir ${APPIAN_REPO}
+else
+	echo "skipped - ${APPIAN_REPO}-${VER} already exists!"
+fi
+
+
+## RUN ON EACH BE
+if [[ ! -d ${APPIAN_HOME}-${VER} ]] ; then
+	mv ${APPIAN_HOME} ${APPIAN_HOME}-${VER}
+	mkdir ${APPIAN_HOME}
+else
+	echo "skipped - ${APPIAN_HOME}-${VER} already exists!"
+fi
+
+# install in /COLO/appian
+if [[ -e $INSTALL_BIN ]] ; then
+	$INSTALL_BIN --mode silent --prefix /COLO/appian
+else
+	echo "ERROR: installation file could not be found!"
+fi
+
+
+
+############   STEP 6  - APPIAN CONFIGURATION   #############
+##################################################
+
+# setup configuration tool - ON EACH BACK END
+CONFIG_ZIP=$APP_SHARE/install_binaries/configure-		[WHEN IN SHELL CLICK TAB TO AUTOCOMPLETE FILE NAME]
+
+# RUN ON EACH BE
+mkdir -p ${APPIAN_HOME}/_admin/_scripts/configure
+if [[ -e $CONFIG_ZIP ]] ; then
+	unzip $CONFIG_ZIP -d $APPIAN_HOME/_admin/_scripts/configure/
+else
+	echo "ERROR: configure zip not found" ; echo
+fi
+
+# create repository - RUN ON EACH BE
+${APPIAN_HOME}/_admin/_scripts/configure/configure.sh -silent task=createRepository repositoryDir=$APPIAN_REPO
+
+# register repo - RUN ONCE
+${APPIAN_HOME}/_admin/_scripts/configure/configure.sh -silent task=registerEnvironment environmentName=$ENV_NAME
+
+# copy repo data - RUN ON EACH BE
+cp -rp ${APPIAN_REPO}-${VER}/* ${APPIAN_REPO}
+
+
+## RUN ONCE
+# create search server password
+SS_PWD=123456
+SS_KEY="conf.search-server.user.appian.password"
+CONF_FILE=$APPIAN_REPO/search-server/conf/custom.properties.$ENV_NAME
+if grep -q "${SS_KEY}=" $CONF_FILE ; then
+	sed -i "s/${SS_KEY}=.*/${SS_KEY}=$SS_PWD/" $CONF_FILE
+else
+	echo -e "\n${SS_KEY}=$SS_PWD" >> $CONF_FILE
+fi
+SS_KEY="conf.password.SearchServer"
+CONF_FILE=$APPIAN_REPO/conf/passwords.properties.${ENV_NAME}
+if grep -q "${SS_KEY}=" $CONF_FILE ; then
+	sed -i "s|${SS_KEY}=.*|${SS_KEY}=$SS_PWD|" $CONF_FILE
+else
+	echo -e "\n${SS_KEY}=$SS_PWD" >> $CONF_FILE
+fi
+
+
+# cleanup repo
+find $APPIAN_REPO -type f -name README* -exec rm {} \;
+find $APPIAN_REPO -type f -name *.example -exec rm {} \;
+
+
+
+# deploy repo - RUN ON EACH BE
+${APPIAN_HOME}/_admin/_scripts/configure/configure.sh -silent task=deployAppianConfigurations environmentName=$ENV_NAME
+
+# cleanup home
+#find $APPIAN_HOME -type f -name *.example -exec rm {} \;
+
+
+
+############   STEP 7  - COPY DATA - ON EACH BACKEND  #####################
+###  for each sync run with '-n' switch to test
+### if status is 0 remove '-n' and everything after it (i.e: -n >/dev/null 2>&1 ; echo $? ) and run again
+
+## _admin - RUN ON EACH BE
+cd ${APPIAN_HOME}-${VER}/_admin/
+rsync -vaz --progress --partial accdocs1 accdocs2 accdocs3 models plugins process_notes shared ${APPIAN_HOME}/_admin/ -n >/dev/null 2>&1
+err_code=$?
+if [[ $err_code -eq 0 ]] ; then
+	rsync -vaz --progress --partial accdocs1 accdocs2 accdocs3 models plugins process_notes shared ${APPIAN_HOME}/_admin/
+else
+	echo "ERROR: rsync dry run failed with status code $err_code"
+fi
+
+## data-server - RUN ON EACH BE
+rsync -vaz --progress --partial ${APPIAN_HOME}-${VER}/data-server/data ${APPIAN_HOME}/data-server/ -n >/dev/null 2>&1
+err_code=$?
+if [[ $err_code -eq 0 ]] ; then
+	rsync -vaz --progress --partial ${APPIAN_HOME}-${VER}/data-server/data ${APPIAN_HOME}/data-server/
+else
+	echo "ERROR: rsync dry run failed with status code $err_code"
+fi
+
+## search-server - RUN ON EACH BE
+rsync -vaz --progress --partial ${APPIAN_HOME}-${VER}/search-server/data ${APPIAN_HOME}/search-server/ -n >/dev/null 2>&1
+err_code=$?
+if [[ $err_code -eq 0 ]] ; then
+	rsync -vaz --progress --partial ${APPIAN_HOME}-${VER}/search-server/data ${APPIAN_HOME}/search-server/
+else
+	echo "ERROR: rsync dry run failed with status code $err_code"
+fi
+
+## server - RUN ON EACH BE
+rsync -vaz --include="*/" --include="gw1/*.kdb" --exclude="*" --partial --progress ${APPIAN_HOME}-${VER}/server/ ${APPIAN_HOME}/server/ -n >/dev/null 2>&1
+err_code=$?
+if [[ $err_code -eq 0 ]] ; then
+	rsync -vaz --include="*/" --include="gw1/*.kdb" --exclude="*" --partial --progress ${APPIAN_HOME}-${VER}/server/ ${APPIAN_HOME}/server/
+else
+	echo "ERROR: rsync dry run failed with status code $err_code"
+fi
+
+## RUN ON EACH BE
+SERVER_DIRS=("archived-process"
+"msg"
+"channels/gw1"
+"collaboration/gw1"
+"forums/gw1"
+"notifications/gw1"
+"personalization/gw1"
+"portal/gw1"
+"process/analytics/0000/gw1"
+"process/analytics/0001/gw1"
+"process/analytics/0002/gw1"
+"process/analytics/0003/gw1"
+"process/analytics/0004/gw1"
+"process/analytics/0005/gw1"
+"process/analytics/0006/gw1"
+"process/design/gw1"
+"process/exec/00/gw1"
+"process/exec/01/gw1"
+"process/exec/02/gw1"
+"process/exec/03/gw1"
+"process/exec/04/gw1"
+"process/exec/05/gw1"
+"process/exec/06/gw1")
+
+for d in ${SERVER_DIRS[@]} ; do
+	echo "deleting: ${APPIAN_HOME}/server/${d}"
+	rm -rf ${APPIAN_HOME}/server/${d}
+	echo "linking: '${APP_SHARE}/server/${d}' to '${APPIAN_HOME}/server/${d}'"
+	ln -s ${APP_SHARE}/server/${d} ${APPIAN_HOME}/server/${d}
+	echo
+done
+
+
+## services - RUN ON EACH BE
+cd ${APPIAN_HOME}-${VER}/services
+rsync -vaz --progress --partial data/kafka-logs data/zookeeper ${APPIAN_HOME}/services/data/ -n >/dev/null 2>&1
+err_code=$?
+if [[ $err_code -eq 0 ]] ; then
+	rsync -vaz --progress --partial data/kafka-logs data/zookeeper ${APPIAN_HOME}/services/data/
+else
+	echo "ERROR: rsync dry run failed with status code $err_code"
+fi
+
+## logs - RUN ON EACH BE
+[[ -d ${APPIAN_HOME}/logs ]] && rm -rf ${APPIAN_HOME}/logs
+ln -snf ${APP_SHARE}/shared-logs/$(echo $(hostname) | sed 's/.*/\L&/').hq.il.bll ${APPIAN_HOME}/logs
+ln -snf ${APP_SHARE}/shared-logs ${APPIAN_HOME}/shared-logs
+
+
+# copy FE data (REMOTE) - RUN ON EACH BE
+FRONTEND=$(cat ~/.ssh/config | grep HostName | awk '{print $2}' | sed 's/ *//g')
+rsync -vaz --progress --partial --delete /COLO/appian/deployment/web.war/ $(stat -c %U /COLO/appian)@$FRONTEND:/var/www/html/suite/ -n >/dev/null 2>&1
+err_code=$?
+if [[ $err_code -eq 0 ]] ; then
+	rsync -vaz --progress --partial --delete /COLO/appian/deployment/web.war/ $(stat -c %U /COLO/appian)@$FRONTEND:/var/www/html/suite/
+else
+	echo "ERROR: rsync dry run failed with status code $err_code"
+fi
+
+
+# copy certs - ON EACH BACKEND
+if [[ -d ${APPIAN_HOME}/java/jre/lib/security/ ]] ; then
+	cp -Rp ${APPIAN_HOME}-${VER}/java/jre/lib/security/cacerts ${APPIAN_HOME}/java/jre/lib/security/
+else
+	cp -Rp ${APPIAN_HOME}-${VER}/java/jre/lib/security/cacerts ${APPIAN_HOME}/java/lib/security/
+fi
+
+
+
+############   STEP 8  - SETUP LICENSES   ####################
+##################################################
+
+# BEFORE STARTING THE ENGINES MAKE SURE ALL LICENSES ARE INSTALLED
+
+
+
+
+
+############   STEP 9  - START APPIAN   ####################
+##################################################
+
+# START APPIAN SERVICES or USE APPADMIN
+/COLO/appian/services/bin/start.sh -p appian123 -s all
+/COLO/appian/data-server/bin/start.sh
+/COLO/appian/search-server/bin/start.sh
+
+### START 1 TOMCAT FIRST AND ONLY AFTER START THE OTHER 2 ###
+/COLO/appian/tomcat/apache-tomcat/bin/start-appserver.sh
+
+tail -f /COLO/appian/logs/tomcat-stdOut.log
+
+
+
+##################################################
+####################   ROLLBACK   ####################
+##################################################
+#
+# 1. revert directories appian + appianrepository back to the old version
+# 2. resync web data again
+#
+##################################################
+##################################################
