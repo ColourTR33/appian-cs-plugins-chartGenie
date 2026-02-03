@@ -2,7 +2,7 @@
   <plugin-info>
     <description>A suite of services for generating charts and embedding them into Microsoft Word documents.</description>
     <vendor name="Appian Customer Success" url="https://community.appian.com" />
-    <version>1.1.16</version>
+    <version>1.1.17</version>
     <osgi-compliant>true</osgi-compliant>
   </plugin-info>
 

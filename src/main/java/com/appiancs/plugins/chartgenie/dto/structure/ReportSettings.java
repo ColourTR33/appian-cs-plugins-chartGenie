@@ -7,9 +7,27 @@ public class ReportSettings {
   private String headerFont;
   private String headerColor;
   private String footerText;
+  private String pageSize; // "A4" or "LETTER"
+  private String orientation;
 
   public Boolean getQrCodeEnabled() {
     return qrCodeEnabled;
+  }
+
+  public String getPageSize() {
+    return pageSize;
+  }
+
+  public void setPageSize(String pageSize) {
+    this.pageSize = pageSize;
+  }
+
+  public String getOrientation() {
+    return orientation;
+  }
+
+  public void setOrientation(String orientation) {
+    this.orientation = orientation;
   }
 
   public void setQrCodeEnabled(Boolean qrCodeEnabled) {

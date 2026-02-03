@@ -32,6 +32,7 @@ dependencies {
   // add your runtime dependencies here
   // implementation 'groupId:artifactId:version'// Source: https://mvnrepository.com/artifact/org.jfree/jfreechart
   implementation("org.jfree:jfreechart:1.5.6")
+  implementation 'org.jsoup:jsoup:1.17.2'
   implementation("org.apache.poi:poi-ooxml:5.5.1") {
     // Exclude Log4j to prevent conflicts with Appian
     exclude group: 'org.apache.logging.log4j'

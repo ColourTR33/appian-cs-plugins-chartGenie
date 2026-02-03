@@ -3,6 +3,7 @@ package com.appiancs.plugins.chartgenie.dto.structure;
 import java.util.List;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
+import com.appiancs.plugins.chartgenie.dto.TableConfiguration;
 
 public class ReportSection {
   private String type;
@@ -15,6 +16,16 @@ public class ReportSection {
   private ChartConfiguration chartConfig;
   private List<ReportSection> sidebarContent;
   private List<ReportSection> mainContent;
+
+  private TableConfiguration tableConfig;
+
+  public TableConfiguration getTableConfig() {
+    return tableConfig;
+  }
+
+  public void setTableConfig(TableConfiguration tableConfig) {
+    this.tableConfig = tableConfig;
+  }
 
   public ReportSection() {
   }
