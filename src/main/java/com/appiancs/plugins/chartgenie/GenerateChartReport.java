@@ -36,78 +36,89 @@ public class GenerateChartReport extends BaseSmartService {
     super(contentService);
   }
 
-    @Override
-    public void run() throws SmartServiceException {
-        File tempTemplate = null;
-        File finalReport = null;
+  @Override
+  public void run() throws SmartServiceException {
+    File tempTemplate = null;
+    File finalReport = null;
 
-        System.out.println("====== DEBUG: CHART GENIE STARTED ======");
+    System.out.println("====== DEBUG: CHART GENIE STARTED ======");
 
+    try {
+      // 1. Pre-validation
+      if (jsonPayload == null || jsonPayload.trim().isEmpty()) {
+        throw new IllegalArgumentException("The JSON Payload is empty. Please provide a valid configuration.");
+      }
+      if (templateDocumentId == null) {
+        throw new IllegalArgumentException("Template Document ID is missing.");
+      }
+
+      String cleanJson = jsonPayload.trim();
+      System.out.println("====== DEBUG: Parsing JSON... Length: " + cleanJson.length());
+
+      // 2. Lenient Parsing
+      Gson gson = new GsonBuilder().setLenient().create();
+      ReportRequest request;
+
+      try {
+        request = gson.fromJson(cleanJson, ReportRequest.class);
+      } catch (com.google.gson.JsonSyntaxException jse) {
+        throw new IllegalArgumentException("JSON Syntax Error: " + jse.getMessage() +
+          ". Tip: Check for trailing commas or unclosed brackets.");
+      }
+
+      if (request == null || request.getSections() == null || request.getSections().isEmpty()) {
+        throw new IllegalArgumentException("JSON structure is valid but contains no 'sections'. Nothing to generate.");
+      }
+
+      // 3. Settings Merge
+      if (request.getSettings() == null)
+        request.setSettings(new ReportSettings());
+      if (this.includeQrCode != null)
+        request.getSettings().setQrCodeEnabled(this.includeQrCode);
+      if (this.qrCodeUrl != null)
+        request.getSettings().setQrUrl(this.qrCodeUrl);
+
+      // 4. File Handling
+      System.out.println("====== DEBUG: Downloading Template ID: " + templateDocumentId);
+      Document appianDoc = contentService.download(templateDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
+      tempTemplate = File.createTempFile("genie_template_", ".docx");
+      try (InputStream in = appianDoc.getInputStream()) {
+        Files.copy(in, tempTemplate.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      }
+
+      // 5. Generation
+      System.out.println("====== DEBUG: Calling WordDocumentService...");
+      WordDocumentService wordService = new WordDocumentService();
+      finalReport = wordService.generateReport(tempTemplate, request.getSettings(), request.getSections());
+
+      // 6. Finalization
+      System.out.println("====== DEBUG: Generation Complete. File Size: " + finalReport.length());
+      this.newDocumentId = DocumentUtils.uploadDocument(contentService, finalReport, newDocumentName, saveInFolderId, "docx");
+      System.out.println("====== DEBUG: Upload Complete. ID: " + newDocumentId);
+
+    } catch (IllegalArgumentException e) {
+      // Catch specific user-input errors for a clean Appian message
+      System.out.println("====== DEBUG: VALIDATION ERROR: " + e.getMessage());
+      handleException(e, e.getMessage());
+    } catch (Exception e) {
+      // Catch systemic failures
+      System.out.println("====== DEBUG: EXCEPTION CAUGHT IN RUN ======");
+      e.printStackTrace();
+      handleException(e, "Unexpected error: " + e.getMessage());
+    } finally {
+      // Cleanup
+      if (tempTemplate != null)
         try {
-            // 1. Pre-validation
-            if (jsonPayload == null || jsonPayload.trim().isEmpty()) {
-                throw new IllegalArgumentException("The JSON Payload is empty. Please provide a valid configuration.");
-            }
-            if (templateDocumentId == null) {
-                throw new IllegalArgumentException("Template Document ID is missing.");
-            }
-
-            String cleanJson = jsonPayload.trim();
-            System.out.println("====== DEBUG: Parsing JSON... Length: " + cleanJson.length());
-
-            // 2. Lenient Parsing
-            Gson gson = new GsonBuilder().setLenient().create();
-            ReportRequest request;
-
-            try {
-                request = gson.fromJson(cleanJson, ReportRequest.class);
-            } catch (com.google.gson.JsonSyntaxException jse) {
-                throw new IllegalArgumentException("JSON Syntax Error: " + jse.getMessage() +
-                        ". Tip: Check for trailing commas or unclosed brackets.");
-            }
-
-            if (request == null || request.getSections() == null || request.getSections().isEmpty()) {
-                throw new IllegalArgumentException("JSON structure is valid but contains no 'sections'. Nothing to generate.");
-            }
-
-            // 3. Settings Merge
-            if (request.getSettings() == null) request.setSettings(new ReportSettings());
-            if (this.includeQrCode != null) request.getSettings().setQrCodeEnabled(this.includeQrCode);
-            if (this.qrCodeUrl != null) request.getSettings().setQrUrl(this.qrCodeUrl);
-
-            // 4. File Handling
-            System.out.println("====== DEBUG: Downloading Template ID: " + templateDocumentId);
-            Document appianDoc = contentService.download(templateDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
-            tempTemplate = File.createTempFile("genie_template_", ".docx");
-            try (InputStream in = appianDoc.getInputStream()) {
-                Files.copy(in, tempTemplate.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            // 5. Generation
-            System.out.println("====== DEBUG: Calling WordDocumentService...");
-            WordDocumentService wordService = new WordDocumentService();
-            finalReport = wordService.generateReport(tempTemplate, request.getSettings(), request.getSections());
-
-            // 6. Finalization
-            System.out.println("====== DEBUG: Generation Complete. File Size: " + finalReport.length());
-            this.newDocumentId = DocumentUtils.uploadDocument(contentService, finalReport, newDocumentName, saveInFolderId, "docx");
-            System.out.println("====== DEBUG: Upload Complete. ID: " + newDocumentId);
-
-        } catch (IllegalArgumentException e) {
-            // Catch specific user-input errors for a clean Appian message
-            System.out.println("====== DEBUG: VALIDATION ERROR: " + e.getMessage());
-            handleException(e, e.getMessage());
-        } catch (Exception e) {
-            // Catch systemic failures
-            System.out.println("====== DEBUG: EXCEPTION CAUGHT IN RUN ======");
-            e.printStackTrace();
-            handleException(e, "Unexpected error: " + e.getMessage());
-        } finally {
-            // Cleanup
-            if (tempTemplate != null) try { Files.delete(tempTemplate.toPath()); } catch (Exception ignored) {}
-            if (finalReport != null) try { Files.delete(finalReport.toPath()); } catch (Exception ignored) {}
+          Files.delete(tempTemplate.toPath());
+        } catch (Exception ignored) {
+        }
+      if (finalReport != null)
+        try {
+          Files.delete(finalReport.toPath());
+        } catch (Exception ignored) {
         }
     }
+  }
 
   @Input(required = Required.ALWAYS)
   public void setJsonPayload(String jsonPayload) {
