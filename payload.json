@@ -1,0 +1,108 @@
+{
+  "settings": {
+    "headerText": "Internal Audit: Global Payments Review | CONFIDENTIAL",
+    "footerText": "Report Ref: IA-2026-001 | Page 1",
+    "pageSize": "A4",
+    "orientation": "LANDSCAPE"
+  },
+  "sections": [
+    {
+      "type": "HEADING",
+      "text": "1. Summary"
+    },
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "mainContent": [
+        {
+          "type": "RICH_TEXT",
+          "text": "<p>The <b><span style='color:#00B050'>SATISFACTORY</span></b> rating is driven by effective control automation. However, two <b>Major</b> issues were identified regarding legacy system access.</p>"
+        },
+        {
+          "type": "RICH_TEXT",
+          "text": "<p><b>Key Observations:</b></p><ul><li>Control design is effective.</li><li>Operating effectiveness has improved since Q4.</li><li>Documentation gaps remain in the APAC region.</li></ul>"
+        }
+      ],
+      "sidebarContent": [
+        {
+          "type": "STATUS_BADGE",
+          "text": "SATISFACTORY",
+          "accentColor": "00B050"
+        },
+        {
+          "type": "CHART",
+          "chartConfig": {
+            "chartType": "DONUT",
+            "title": "Overall Rating",
+            "categories": ["Effective", "Ineffective"],
+            "values": [85, 15],
+            "primaryColor": "00B050",
+            "width": 300,
+            "height": 300,
+            "metrics": "85% Effective"
+          }
+        }
+      ]
+    },
+    {
+      "type": "PAGE_BREAK",
+      "text": ""
+    },
+    {
+      "type": "HEADING",
+      "text": "2. Detailed Findings (Full Width)"
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "The following grid details the specific findings. Note the use of bold labels and colored values to simulate a 'Form' layout within the table structure."
+    },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Issue Detail", "Owner & Action"],
+        "headerBackgroundColor": "444444",
+        "headerTextColor": "FFFFFF",
+        "rows": [
+          [
+            "<b>Title:</b> <span style='color:#FF0000'>Unauthorized Admin Access</span><br/><b>Root Cause:</b> Role definition failure.<br/><b>Risk:</b> High probability of data leakage.",
+            "<b>Owner:</b> J. Smith (IT)<br/><b>Due Date:</b> 30-Mar-2026<br/><b>Rating:</b> <span style='color:#FF0000'><b>CRITICAL</b></span>"
+          ],
+          [
+            "<b>Title:</b> <span style='color:#ED7D31'>Delayed Reconciliations</span><br/><b>Root Cause:</b> Manual process volume.<br/><b>Risk:</b> Financial misstatement.",
+            "<b>Owner:</b> M. Jones (Finance)<br/><b>Due Date:</b> 15-Apr-2026<br/><b>Rating:</b> <span style='color:#ED7D31'><b>MAJOR</b></span>"
+          ]
+        ]
+      }
+    },
+    {
+      "type": "HEADING",
+      "text": "3. Risk Analytics"
+    },
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "mainContent": [
+        {
+          "type": "CHART",
+          "chartConfig": {
+            "chartType": "COLUMN",
+            "title": "Issues by Department",
+            "categories": ["IT", "Finance", "HR", "Ops"],
+            "values": [5, 12, 2, 8],
+            "primaryColor": "2F5496",
+            "width": 400,
+            "height": 250
+          }
+        }
+      ],
+      "sidebarContent": [
+        {
+          "type": "PARAGRAPH",
+          "text": "Finance accounts for the majority of open issues due to the recent system migration."
+        },
+        {
+          "type": "QR_CODE",
+          "text": "https://audit-system.internal/reports/IA-2026-001"
+        }
+      ]
+    }
+  ]
+}
