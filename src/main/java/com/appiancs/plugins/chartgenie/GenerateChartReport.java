@@ -15,6 +15,7 @@ import com.appiancorp.suiteapi.process.framework.SmartServiceContext;
 import com.appiancorp.suiteapi.process.palette.PaletteInfo;
 import com.appiancs.plugins.chartgenie.base.BaseSmartService;
 import com.appiancs.plugins.chartgenie.dto.structure.ReportRequest;
+import com.appiancs.plugins.chartgenie.dto.structure.ReportSection;
 import com.appiancs.plugins.chartgenie.dto.structure.ReportSettings;
 import com.appiancs.plugins.chartgenie.service.WordDocumentService;
 import com.appiancs.plugins.chartgenie.utils.DocumentUtils;
@@ -55,19 +56,35 @@ public class GenerateChartReport extends BaseSmartService {
       String cleanJson = jsonPayload.trim();
       System.out.println("====== DEBUG: Parsing JSON... Length: " + cleanJson.length());
 
-      // 2. Lenient Parsing
-      Gson gson = new GsonBuilder().setLenient().create();
+      // ENTERPRISE FIX 1: Aggressive Pre-Sanitization
+      // Strips trailing commas before closing brackets/braces to prevent null object creation
+      cleanJson = cleanJson.replaceAll(",\\s*([}\\]])", "$1");
+
+      // ENTERPRISE FIX 2: Strict Parsing over Lenient Parsing
+      // Removed .setLenient() so malformed JSON fails predictably instead of silently skipping data
+      Gson gson = new GsonBuilder().create();
       ReportRequest request;
 
       try {
         request = gson.fromJson(cleanJson, ReportRequest.class);
       } catch (com.google.gson.JsonSyntaxException jse) {
-        throw new IllegalArgumentException("JSON Syntax Error: " + jse.getMessage() +
-          ". Tip: Check for trailing commas or unclosed brackets.");
+        throw new IllegalArgumentException("JSON Structure is invalid: " + jse.getMessage() +
+          ". Please check your formatting.");
       }
 
       if (request == null || request.getSections() == null || request.getSections().isEmpty()) {
         throw new IllegalArgumentException("JSON structure is valid but contains no 'sections'. Nothing to generate.");
+      }
+
+      // ENTERPRISE FIX 3: Deep Validation
+      // Remove any null sections and ensure required fields exist
+      request.getSections().removeIf(section -> section == null);
+
+      for (int i = 0; i < request.getSections().size(); i++) {
+        ReportSection sec = request.getSections().get(i);
+        if (sec.getType() == null || sec.getType().trim().isEmpty()) {
+          throw new IllegalArgumentException("Validation Failed: Section at index " + i + " is missing a required 'type'.");
+        }
       }
 
       // 3. Settings Merge

@@ -139,7 +139,7 @@ tasks.register('runLocalTest', JavaExec) {
   classpath = sourceSets.test.runtimeClasspath
 
   // The fully qualified name of your Main class
-  main = 'com.appiancs.plugins.chartgenie.test.LocalTestRunner'
+  main = 'com.appiancs.plugins.chartgenie.LocalRunner'
 
   // Ensure we can see the System.out.println logs
   standardOutput = System.out
@@ -147,7 +147,7 @@ tasks.register('runLocalTest', JavaExec) {
 
 tasks.register('runJsonTest', JavaExec) {
   classpath = sourceSets.test.runtimeClasspath
-  mainClass = 'com.appiancs.plugins.chartgenie.test.JsonTestRunner'
+  mainClass = 'com.appiancs.plugins.chartgenie.JsonRunner'
 }
 
 task jacocoRootReport(type: JacocoReport) {
@@ -212,6 +212,14 @@ java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(17)
   }
+}
+
+tasks.withType(JavaCompile) {
+  options.encoding = 'UTF-8'
+}
+
+tasks.withType(JavaExec) {
+  defaultCharacterEncoding = 'UTF-8'
 }
 
 version = new groovy.xml.XmlSlurper().parse(file('src/main/resources/appian-plugin.xml')).'plugin-info'.version

@@ -4,11 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
-import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy;
 import org.apache.poi.xwpf.usermodel.*;
+import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
@@ -21,10 +21,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 
 public class WordDocumentService {
   private static final int PAGE_CONTENT_WIDTH_TWIPS = 11054;
-  private static final int GEN_RES_WIDTH = 600;
-  private static final int GEN_RES_HEIGHT = 400;
 
-  // --- DEPENDENCIES ---
   private final HtmlRichTextRenderer htmlRenderer = new HtmlRichTextRenderer();
   private final TableGenerator tableGenerator = new TableGenerator();
 
@@ -32,13 +29,27 @@ public class WordDocumentService {
     try (FileInputStream fis = new FileInputStream(templateFile);
       XWPFDocument doc = new XWPFDocument(fis)) {
 
+      int currentAvailableWidth = PAGE_CONTENT_WIDTH_TWIPS;
+
       if (settings != null) {
-        applyHeaderFooter(doc, settings.getHeaderText(), settings.getHeaderFont(), settings.getHeaderColor(), settings.getFooterText());
-        applyPageSettings(doc, settings.getPageSize(), settings.getOrientation());
+        currentAvailableWidth = applyPageSettings(doc, settings.getPageSize(), settings.getOrientation());
+        applyHeaderFooter(doc, settings.getHeaderText(), settings.getHeaderColor(), settings.getFooterText());
+      }
+
+      if (doc.getBodyElements().size() > 0 && doc.getBodyElements().get(0).getElementType() == BodyElementType.PARAGRAPH) {
+        XWPFParagraph firstPara = (XWPFParagraph) doc.getBodyElements().get(0);
+        if (firstPara.getText().trim().isEmpty()) {
+          firstPara.setSpacingAfter(0);
+          firstPara.setSpacingBefore(0);
+          CTPPr ppr = firstPara.getCTP().isSetPPr() ? firstPara.getCTP().getPPr() : firstPara.getCTP().addNewPPr();
+          CTSpacing spacing = ppr.isSetSpacing() ? ppr.getSpacing() : ppr.addNewSpacing();
+          spacing.setLineRule(STLineSpacingRule.EXACT);
+          spacing.setLine(BigInteger.valueOf(20));
+        }
       }
 
       if (sections != null) {
-        processSections(doc, sections, null, PAGE_CONTENT_WIDTH_TWIPS, false);
+        processSections(doc, sections, null, currentAvailableWidth, false);
       }
 
       File outputFile = File.createTempFile("genie_report_", ".docx");
@@ -52,283 +63,357 @@ public class WordDocumentService {
   private void processSections(XWPFDocument doc, List<ReportSection> sections, XWPFTableCell cell, int availableWidthTwips,
     boolean isSidebar) throws Exception {
     for (ReportSection section : sections) {
-      try {
-        renderSection(doc, section, cell, availableWidthTwips, isSidebar);
-      } catch (Exception e) {
-        XWPFParagraph p = (cell != null) ? cell.addParagraph() : doc.createParagraph();
-        p.createRun().setText("[ERROR: " + e.getMessage() + "]");
+      String type = section.getType() != null ? section.getType().toUpperCase().trim() : "TEXT";
+
+      XWPFParagraph p = null;
+      if (!type.equals("REPORT_TABLE") && !type.equals("RICH_TEXT") && !type.equals("SIDEBAR_LAYOUT") && !type.equals("HEADING2") &&
+        !type.equals("STATUS_BADGE")) {
+        p = (cell != null) ? cell.addParagraph() : doc.createParagraph();
+        if (isSidebar)
+          p.setAlignment(ParagraphAlignment.CENTER);
+      }
+
+      switch (type) {
+        case "HEADING":
+          p.setStyle("Heading1");
+          XWPFRun rH = p.createRun();
+          rH.setText(section.getText());
+          rH.setBold(true);
+          rH.setFontSize(14);
+          rH.setColor("00395D");
+          break;
+
+        case "HEADING2":
+          XWPFTable h2Table;
+          if (cell != null) {
+            XWPFParagraph sep = cell.addParagraph();
+            sep.setSpacingAfter(0);
+            sep.setSpacingBefore(0);
+            XmlCursor cursor = sep.getCTP().newCursor();
+            h2Table = cell.insertNewTbl(cursor);
+            cursor.dispose();
+          } else {
+            h2Table = doc.createTable(1, 1);
+            doc.createParagraph();
+          }
+
+          XWPFTableRow h2Row = null;
+          if (!h2Table.getRows().isEmpty())
+            h2Row = h2Table.getRow(0);
+          if (h2Row == null)
+            h2Row = h2Table.createRow();
+          while (h2Row.getTableCells().size() < 1)
+            h2Row.createCell();
+
+          CTTblPr h2TblPr = h2Table.getCTTbl().getTblPr() != null ? h2Table.getCTTbl().getTblPr() : h2Table.getCTTbl().addNewTblPr();
+
+          // ULTIMATE HEADING2 FIX: Switch to fixed DXA width (5000 Twips) so Word cannot shrink it
+          h2TblPr.addNewTblW().setType(STTblWidth.DXA);
+          h2TblPr.getTblW().setW(BigInteger.valueOf(5000));
+
+          CTTblBorders h2Borders = h2TblPr.isSetTblBorders() ? h2TblPr.getTblBorders() : h2TblPr.addNewTblBorders();
+          h2Borders.addNewBottom().setVal(STBorder.NONE);
+          h2Borders.addNewLeft().setVal(STBorder.NONE);
+          h2Borders.addNewRight().setVal(STBorder.NONE);
+          h2Borders.addNewTop().setVal(STBorder.NONE);
+
+          XWPFTableCell h2Cell = h2Row.getCell(0);
+          h2Cell.setColor("00395D");
+
+          CTTcPr h2TcPr = h2Cell.getCTTc().isSetTcPr() ? h2Cell.getCTTc().getTcPr() : h2Cell.getCTTc().addNewTcPr();
+
+          // Force the Cell to also be 5000 Twips to enforce the boundary
+          CTTblWidth h2TcW = h2TcPr.isSetTcW() ? h2TcPr.getTcW() : h2TcPr.addNewTcW();
+          h2TcW.setType(STTblWidth.DXA);
+          h2TcW.setW(BigInteger.valueOf(5000));
+
+          if (!h2TcPr.isSetNoWrap())
+            h2TcPr.addNewNoWrap();
+
+          CTTcMar h2Mar = h2TcPr.isSetTcMar() ? h2TcPr.getTcMar() : h2TcPr.addNewTcMar();
+          h2Mar.addNewTop().setW(BigInteger.valueOf(100));
+          h2Mar.addNewBottom().setW(BigInteger.valueOf(100));
+          h2Mar.addNewLeft().setW(BigInteger.valueOf(150));
+          h2Mar.addNewRight().setW(BigInteger.valueOf(150));
+
+          XWPFParagraph h2P = h2Cell.getParagraphs().isEmpty() ? h2Cell.addParagraph() : h2Cell.getParagraphs().get(0);
+          h2P.setSpacingBefore(0);
+          h2P.setSpacingAfter(0);
+          XWPFRun h2R = h2P.createRun();
+          h2R.setText(section.getText());
+          h2R.setBold(true);
+          h2R.setColor("FFFFFF");
+          h2R.setFontSize(11);
+          break;
+
+        case "STATUS_BADGE":
+          boolean hasTitle = section.getTitle() != null && !section.getTitle().trim().isEmpty();
+          int numCols = hasTitle ? 2 : 1;
+
+          XWPFTable bTable;
+          if (cell != null) {
+            XWPFParagraph sep = cell.addParagraph();
+            sep.setSpacingAfter(0);
+            sep.setSpacingBefore(0);
+            XmlCursor cursor = sep.getCTP().newCursor();
+            bTable = cell.insertNewTbl(cursor);
+            cursor.dispose();
+          } else {
+            bTable = doc.createTable(1, numCols);
+            doc.createParagraph();
+          }
+
+          XWPFTableRow bRow = null;
+          if (!bTable.getRows().isEmpty())
+            bRow = bTable.getRow(0);
+          if (bRow == null)
+            bRow = bTable.createRow();
+          while (bRow.getTableCells().size() < numCols)
+            bRow.createCell();
+
+          CTTblPr bTblPr = bTable.getCTTbl().getTblPr() != null ? bTable.getCTTbl().getTblPr() : bTable.getCTTbl().addNewTblPr();
+          bTblPr.addNewJc().setVal(STJcTable.RIGHT);
+
+          bTblPr.addNewTblW().setType(STTblWidth.DXA);
+          bTblPr.getTblW().setW(BigInteger.valueOf(hasTitle ? 6000 : 4000));
+
+          CTTblBorders bBorders = bTblPr.isSetTblBorders() ? bTblPr.getTblBorders() : bTblPr.addNewTblBorders();
+          bBorders.addNewBottom().setVal(STBorder.NONE);
+          bBorders.addNewLeft().setVal(STBorder.NONE);
+          bBorders.addNewRight().setVal(STBorder.NONE);
+          bBorders.addNewTop().setVal(STBorder.NONE);
+          bBorders.addNewInsideH().setVal(STBorder.NONE);
+          bBorders.addNewInsideV().setVal(STBorder.NONE);
+
+          int currentCellIdx = 0;
+
+          if (hasTitle) {
+            XWPFTableCell lblCell = bRow.getCell(currentCellIdx++);
+            CTTcPr lblTcPr = lblCell.getCTTc().isSetTcPr() ? lblCell.getCTTc().getTcPr() : lblCell.getCTTc().addNewTcPr();
+            CTTblWidth lblTcW = lblTcPr.isSetTcW() ? lblTcPr.getTcW() : lblTcPr.addNewTcW();
+            lblTcW.setW(BigInteger.valueOf(4000));
+
+            if (!lblTcPr.isSetNoWrap())
+              lblTcPr.addNewNoWrap();
+
+            lblCell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+
+            XWPFParagraph lblP = lblCell.getParagraphs().isEmpty() ? lblCell.addParagraph() : lblCell.getParagraphs().get(0);
+            lblP.setAlignment(ParagraphAlignment.RIGHT);
+            lblP.setSpacingBefore(0);
+            lblP.setSpacingAfter(0);
+            XWPFRun lblR = lblP.createRun();
+            lblR.setText(section.getTitle() + "  ");
+            lblR.setBold(true);
+            lblR.setFontSize(10);
+          }
+
+          XWPFTableCell valCell = bRow.getCell(currentCellIdx);
+          CTTcPr valTcPr = valCell.getCTTc().isSetTcPr() ? valCell.getCTTc().getTcPr() : valCell.getCTTc().addNewTcPr();
+          CTTblWidth valTcW = valTcPr.isSetTcW() ? valTcPr.getTcW() : valTcPr.addNewTcW();
+          valTcW.setW(BigInteger.valueOf(4000));
+
+          valTcPr.addNewNoWrap();
+
+          String hexColor = (section.getAccentColor() != null) ? section.getAccentColor().replace("#", "") : "00395D";
+          valCell.setColor(hexColor);
+          valCell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+
+          XWPFParagraph valP = valCell.getParagraphs().isEmpty() ? valCell.addParagraph() : valCell.getParagraphs().get(0);
+          valP.setAlignment(ParagraphAlignment.CENTER);
+          valP.setSpacingBefore(0);
+          valP.setSpacingAfter(0);
+          XWPFRun valR = valP.createRun();
+          valR.setText(" " + section.getText().toUpperCase() + " ");
+          valR.setBold(true);
+          valR.setColor("FFFFFF");
+          valR.setFontSize(10);
+          break;
+
+        case "REPORT_TABLE":
+          if (section.getTableConfig() != null) {
+            tableGenerator.createStyledTable(doc, cell, section.getTableConfig());
+            if (cell != null) {
+              XWPFParagraph sep = cell.addParagraph();
+              sep.setSpacingAfter(0);
+              sep.setSpacingBefore(0);
+            }
+          }
+          break;
+
+        case "POSITION_TABLE":
+          if (section.getTableConfig() != null) {
+            tableGenerator.createStyledTable(doc, cell, section.getTableConfig());
+            if (cell != null) {
+              XWPFParagraph sep = cell.addParagraph();
+              sep.setSpacingAfter(0);
+              sep.setSpacingBefore(0);
+            }
+          }
+          break;
+
+        case "RICH_TEXT":
+          htmlRenderer.render(doc, cell, section.getText());
+          break;
+
+        case "TEXT":
+        case "PARAGRAPH":
+          XWPFRun rPara = p.createRun();
+          rPara.setText(section.getText());
+          break;
+
+        case "SIDEBAR_LAYOUT":
+          if (cell == null) {
+            createSidebarLayout(doc, section, availableWidthTwips);
+          }
+          break;
+
+        case "PAGE_BREAK":
+          if (cell == null && p != null)
+            p.setPageBreak(true);
+          break;
+
+        case "CHART":
+          if (section.getChartConfig() != null) {
+            generateAndInsertChart(doc, cell, p, section.getChartConfig(), availableWidthTwips, isSidebar);
+          }
+          break;
+
+        case "QR_CODE":
+          p.setAlignment(ParagraphAlignment.CENTER);
+          File qrFile = File.createTempFile("qr_code_", ".png");
+          QRCodeWriter qrCodeWriter = new QRCodeWriter();
+          BitMatrix bitMatrix = qrCodeWriter.encode(section.getText(), BarcodeFormat.QR_CODE, 200, 200);
+          MatrixToImageWriter.writeToPath(bitMatrix, "PNG", qrFile.toPath());
+
+          try (FileInputStream is = new FileInputStream(qrFile)) {
+            XWPFRun rQR = p.createRun();
+            rQR.addPicture(is, XWPFDocument.PICTURE_TYPE_PNG, "qr.png", org.apache.poi.util.Units.toEMU(150),
+              org.apache.poi.util.Units.toEMU(150));
+          } finally {
+            qrFile.delete();
+          }
+          break;
       }
     }
   }
 
-  private void renderSection(XWPFDocument doc, ReportSection section, XWPFTableCell cell, int availableWidthTwips, boolean isSidebar)
-    throws Exception {
-    String type = section.getType() != null ? section.getType().toUpperCase().trim() : "TEXT";
-
-    // Most sections need a paragraph, but Table and RichText handle their own creation.
-    // We create a paragraph only if needed to avoid empty lines.
-    XWPFParagraph p = null;
-    if (!type.equals("REPORT_TABLE") && !type.equals("RICH_TEXT") && !type.equals("SIDEBAR_LAYOUT")) {
-      p = (cell != null) ? cell.addParagraph() : doc.createParagraph();
-      if (isSidebar)
-        p.setAlignment(ParagraphAlignment.CENTER);
+  private void cleanCellParagraphs(XWPFTableCell cell) {
+    if (cell.getParagraphs().size() > 1) {
+      XWPFParagraph first = cell.getParagraphs().get(0);
+      if (first.getText().trim().isEmpty() && first.getRuns().isEmpty()) {
+        cell.removeParagraph(0);
+      }
     }
-
-    switch (type) {
-      case "HEADING":
-        p.setStyle("Heading1");
-        XWPFRun rH = p.createRun();
-        rH.setText(section.getText());
-        rH.setBold(true);
-        rH.setFontSize(14);
-        rH.setColor("2F5496");
-        break;
-
-      case "REPORT_TABLE":
-        if (section.getTableConfig() != null) {
-          // DELEGATE TO HELPER
-          tableGenerator.createStyledTable(doc, cell, section.getTableConfig());
-        }
-        break;
-
-      case "RICH_TEXT":
-        // DELEGATE TO HELPER
-        htmlRenderer.render(doc, cell, section.getText());
-        break;
-
-      case "TEXT":
-      case "PARAGRAPH":
-        XWPFRun rPara = p.createRun();
-        rPara.setText(section.getText());
-        if (isSidebar) {
-          rPara.setFontSize(10);
-          rPara.setItalic(true);
-        }
-        break;
-
-      case "SIDEBAR_LAYOUT":
-        // Still internal for now, as it requires complex recursion into processSections
-        if (cell == null) {
-          // Remove the empty paragraph we didn't create above (or if doc created one automatically)
-          // Complex removal logic omitted for brevity, usually we just create the layout
-          createSidebarLayout(doc, section);
-        }
-        break;
-
-      case "PAGE_BREAK":
-        if (cell == null)
-          p.setPageBreak(true);
-        break;
-
-      case "STATUS_BADGE":
-        String badgeText = section.getText();
-        String hexColor = (section.getAccentColor() != null && !section.getAccentColor().isEmpty())
-          ? section.getAccentColor().replace("#", "")
-          : "666666";
-
-        XWPFRun rBadge = p.createRun();
-        rBadge.setText(" " + badgeText.toUpperCase() + " ");
-        rBadge.setBold(true);
-        rBadge.setColor("FFFFFF");
-        rBadge.setFontSize(10);
-        setTextHighlight(rBadge, hexColor);
-        break;
-
-      case "CHART":
-        if (section.getChartConfig() != null) {
-          ChartConfiguration config = section.getChartConfig();
-          // Title
-          if (config.getTitle() != null && !config.getTitle().isEmpty()) {
-            XWPFRun rTitle = p.createRun();
-            rTitle.setText(config.getTitle());
-            rTitle.setBold(true);
-            rTitle.setFontSize(10);
-            rTitle.setColor("444444");
-            // New paragraph for image
-            p = (cell != null) ? cell.addParagraph() : doc.createParagraph();
-            if (isSidebar)
-              p.setAlignment(ParagraphAlignment.CENTER);
-          }
-          // Image
-          generateAndInsertChart(doc, p, config, availableWidthTwips, isSidebar);
-          // Metrics
-          if (config.getMetrics() != null && !config.getMetrics().isEmpty()) {
-            XWPFParagraph pMetrics = (cell != null) ? cell.addParagraph() : doc.createParagraph();
-            pMetrics.setAlignment(ParagraphAlignment.CENTER);
-            XWPFRun rMetrics = pMetrics.createRun();
-            rMetrics.setText(config.getMetrics());
-            rMetrics.setFontSize(9);
-            rMetrics.setItalic(true);
-            rMetrics.setColor("666666");
-          }
-        }
-        break;
-
-      case "QR_CODE":
-        File qrFile = File.createTempFile("qr_code_", ".png");
-        generateQRCodeImage(section.getText(), 150, 150, qrFile);
-        try (FileInputStream is = new FileInputStream(qrFile)) {
-          XWPFRun rQR = p.createRun();
-          rQR.addPicture(is, XWPFDocument.PICTURE_TYPE_PNG, "qr.png",
-            org.apache.poi.util.Units.toEMU(100), org.apache.poi.util.Units.toEMU(100));
-          rQR.addBreak();
-          XWPFRun rLink = p.createRun();
-          rLink.setText(section.getText());
-          rLink.setFontSize(8);
-          rLink.setColor("666666");
-        } finally {
-          qrFile.delete();
-        }
-        break;
-
-      default:
-        p.createRun().setText(section.getText());
+    if (cell.getParagraphs().isEmpty() ||
+      cell.getBodyElements().get(cell.getBodyElements().size() - 1).getElementType() != BodyElementType.PARAGRAPH) {
+      cell.addParagraph();
     }
   }
 
-  // --- INTERNAL HELPERS (Kept here as they are specific to doc structure or low-level XML) ---
-
-  private void applyHeaderFooter(XWPFDocument doc, String headerText, String headerFont, String headerColor, String footerText) {
+  private void applyHeaderFooter(XWPFDocument doc, String headerText, String headerColor, String footerText) {
     try {
-      XWPFHeaderFooterPolicy policy = doc.getHeaderFooterPolicy();
-      if (policy == null)
-        policy = doc.createHeaderFooterPolicy();
+      CTSectPr sectPr = doc.getDocument().getBody().isSetSectPr() ? doc.getDocument().getBody().getSectPr()
+        : doc.getDocument().getBody().addNewSectPr();
+      XWPFHeaderFooterPolicy policy = new XWPFHeaderFooterPolicy(doc, sectPr);
+
+      if (policy.getDefaultHeader() == null)
+        policy.createHeader(XWPFHeaderFooterPolicy.DEFAULT);
 
       if (headerText != null && !headerText.isEmpty()) {
-        XWPFHeader header = policy.getHeader(XWPFHeaderFooterPolicy.DEFAULT);
-        if (header == null)
-          header = policy.createHeader(XWPFHeaderFooterPolicy.DEFAULT);
-        XWPFParagraph p = header.createParagraph();
-        p.setAlignment(ParagraphAlignment.LEFT);
-        XWPFRun r = p.createRun();
-        r.setText(headerText);
-        r.setBold(true);
-        r.setFontFamily(headerFont);
-        r.setFontSize(16);
-        r.setColor(headerColor);
+        for (XWPFHeader h : doc.getHeaderList()) {
+          XWPFParagraph p;
+          if (h.getParagraphs().isEmpty()) {
+            p = h.createParagraph();
+          } else {
+            XmlCursor cursor = h.getParagraphs().get(0).getCTP().newCursor();
+            p = h.insertNewParagraph(cursor);
+            cursor.dispose();
+          }
+
+          p.setAlignment(ParagraphAlignment.LEFT);
+          p.setSpacingBefore(0);
+          p.setSpacingAfter(0);
+          XWPFRun r = p.createRun();
+          r.setText(headerText);
+          r.setBold(true);
+          r.setFontSize(16);
+          r.setColor(headerColor != null ? headerColor : "00395D");
+        }
       }
+
       if (footerText != null && !footerText.isEmpty()) {
-        XWPFFooter footer = policy.getFooter(XWPFHeaderFooterPolicy.DEFAULT);
-        if (footer == null)
-          footer = policy.createFooter(XWPFHeaderFooterPolicy.DEFAULT);
-        XWPFParagraph p = footer.createParagraph();
-        p.setAlignment(ParagraphAlignment.CENTER);
-        XWPFRun r = p.createRun();
-        r.setText(footerText);
-        r.setFontSize(9);
+        if (policy.getDefaultFooter() == null)
+          policy.createFooter(XWPFHeaderFooterPolicy.DEFAULT);
+
+        for (XWPFFooter f : doc.getFooterList()) {
+          XWPFParagraph p = f.getParagraphs().isEmpty() ? f.createParagraph() : f.createParagraph();
+          p.setAlignment(ParagraphAlignment.CENTER);
+          p.setSpacingBefore(0);
+          p.setSpacingAfter(0);
+          XWPFRun r = p.createRun();
+          r.setText(footerText);
+          r.setFontSize(9);
+          r.setColor("666666");
+        }
       }
     } catch (Exception e) {
       System.err.println("Warning: Failed to apply header/footer: " + e.getMessage());
     }
   }
 
-  private void applyPageSettings(XWPFDocument doc, String pageSize, String orientation) {
+  private int applyPageSettings(XWPFDocument doc, String pageSize, String orientation) {
     CTBody body = doc.getDocument().getBody();
-    if (!body.isSetSectPr())
-      body.addNewSectPr();
-    CTSectPr section = body.getSectPr();
-    if (!section.isSetPgSz())
-      section.addNewPgSz();
-    CTPageSz pgSz = section.getPgSz();
+    CTSectPr section = body.isSetSectPr() ? body.getSectPr() : body.addNewSectPr();
+    CTPageSz pgSz = section.isSetPgSz() ? section.getPgSz() : section.addNewPgSz();
 
-    long width = 11906; // Default A4
+    long width = 11906;
     long height = 16838;
     if ("LETTER".equalsIgnoreCase(pageSize)) {
       width = 12240;
       height = 15840;
     }
+
+    long activeWidth = width;
     if ("LANDSCAPE".equalsIgnoreCase(orientation)) {
       pgSz.setOrient(STPageOrientation.LANDSCAPE);
       pgSz.setW(BigInteger.valueOf(height));
       pgSz.setH(BigInteger.valueOf(width));
+      activeWidth = height;
     } else {
       pgSz.setOrient(STPageOrientation.PORTRAIT);
       pgSz.setW(BigInteger.valueOf(width));
       pgSz.setH(BigInteger.valueOf(height));
     }
+
+    CTPageMar pageMar = section.isSetPgMar() ? section.getPgMar() : section.addNewPgMar();
+    pageMar.setTop(BigInteger.valueOf(1440));
+    pageMar.setBottom(BigInteger.valueOf(1440));
+    pageMar.setLeft(BigInteger.valueOf(1440));
+    pageMar.setRight(BigInteger.valueOf(1440));
+    pageMar.setHeader(BigInteger.valueOf(340));
+    pageMar.setFooter(BigInteger.valueOf(340));
+
+    return (int) (activeWidth - 2880);
   }
 
-  private void createSidebarLayout(XWPFDocument doc, ReportSection section) throws Exception {
-    XWPFTable table = doc.createTable(1, 2);
-    removeTableBorders(table);
-
-    int totalWidth = PAGE_CONTENT_WIDTH_TWIPS;
-    int leftWidth = (int) (totalWidth * 0.68);
-    int rightWidth = (int) (totalWidth * 0.32);
-
-    applyFixedTableLayout(table, leftWidth, rightWidth);
-    setRowMinHeight(table.getRow(0), 1000);
-
-    XWPFTableCell leftCell = table.getRow(0).getCell(0);
-    setCellWidth(leftCell, leftWidth);
-    setCellTransparent(leftCell);
-    if (leftCell.getParagraphs().size() > 0)
-      leftCell.removeParagraph(0);
-    if (section.getMainContent() != null)
-      processSections(doc, section.getMainContent(), leftCell, leftWidth, false);
-
-    XWPFTableCell rightCell = table.getRow(0).getCell(1);
-    setCellWidth(rightCell, rightWidth);
-    setCellTransparent(rightCell);
-    if (rightCell.getParagraphs().size() > 0)
-      rightCell.removeParagraph(0);
-    if (section.getSidebarContent() != null)
-      processSections(doc, section.getSidebarContent(), rightCell, rightWidth, true);
-
-    doc.createParagraph();
-  }
-
-  private void generateAndInsertChart(XWPFDocument doc, XWPFParagraph p, ChartConfiguration config, int availableWidthTwips,
-    boolean isSidebar) throws Exception {
-    boolean isCircular = "PIE".equalsIgnoreCase(config.getChartType()) || "DONUT".equalsIgnoreCase(config.getChartType());
-    int targetGenWidth = GEN_RES_WIDTH;
-    int targetGenHeight = isCircular ? GEN_RES_WIDTH : GEN_RES_HEIGHT;
-    String originalTitle = config.getTitle();
-    config.setTitle("");
-    Integer userW = config.getWidth();
-    Integer userH = config.getHeight();
-    config.setWidth(targetGenWidth);
-    config.setHeight(targetGenHeight);
-
-    ChartGenerationService chartGen = new ChartGenerationService();
-    File chartImage = chartGen.generateChartImage(config);
-    config.setWidth(userW);
-    config.setHeight(userH);
-    config.setTitle(originalTitle);
-
-    try (FileInputStream is = new FileInputStream(chartImage)) {
-      XWPFRun r = p.createRun();
-      double maxDisplayWidthEMU = (availableWidthTwips * 635.0) * 0.95;
-      double aspectRatio = (double) targetGenHeight / targetGenWidth;
-      int finalWidthEMU = (int) maxDisplayWidthEMU;
-      int finalHeightEMU = (int) (finalWidthEMU * aspectRatio);
-      r.addPicture(is, XWPFDocument.PICTURE_TYPE_PNG, chartImage.getName(), finalWidthEMU, finalHeightEMU);
-    } finally {
-      chartImage.delete();
+  private void createSidebarLayout(XWPFDocument doc, ReportSection section, int availableWidthTwips) throws Exception {
+    XWPFTable table;
+    if (doc.getTables().isEmpty() && !doc.getParagraphs().isEmpty()) {
+      XmlCursor cursor = doc.getParagraphs().get(0).getCTP().newCursor();
+      table = doc.insertNewTbl(cursor);
+      cursor.dispose();
+    } else {
+      table = doc.createTable();
     }
-  }
 
-  private void setTextHighlight(XWPFRun run, String hexColor) {
-    if (run.getCTR() == null)
-      return;
-    CTRPr rpr = run.getCTR().isSetRPr() ? run.getCTR().getRPr() : run.getCTR().addNewRPr();
-    CTShd shd = rpr.addNewShd();
-    shd.setVal(STShd.CLEAR);
-    shd.setColor("auto");
-    shd.setFill(hexColor);
-  }
+    XWPFTableRow row = table.getRow(0) == null ? table.createRow() : table.getRow(0);
+    if (row.getCell(0) == null)
+      row.createCell();
+    if (row.getCell(1) == null)
+      row.createCell();
 
-  private void generateQRCodeImage(String text, int width, int height, File outputFile) throws Exception {
-    QRCodeWriter qrCodeWriter = new QRCodeWriter();
-    BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-    Path path = outputFile.toPath();
-    MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
-  }
-
-  private void removeTableBorders(XWPFTable table) {
-    CTTblPr tblPr = table.getCTTbl().getTblPr();
-    if (tblPr == null)
-      tblPr = table.getCTTbl().addNewTblPr();
+    CTTblPr tblPr = table.getCTTbl().getTblPr() != null ? table.getCTTbl().getTblPr() : table.getCTTbl().addNewTblPr();
     CTTblBorders borders = tblPr.isSetTblBorders() ? tblPr.getTblBorders() : tblPr.addNewTblBorders();
     borders.addNewBottom().setVal(STBorder.NONE);
     borders.addNewLeft().setVal(STBorder.NONE);
@@ -336,43 +421,75 @@ public class WordDocumentService {
     borders.addNewTop().setVal(STBorder.NONE);
     borders.addNewInsideH().setVal(STBorder.NONE);
     borders.addNewInsideV().setVal(STBorder.NONE);
-  }
 
-  private void applyFixedTableLayout(XWPFTable table, int leftTwips, int rightTwips) {
-    CTTbl ctTbl = table.getCTTbl();
-    CTTblPr pr = ctTbl.getTblPr() != null ? ctTbl.getTblPr() : ctTbl.addNewTblPr();
-    CTTblLayoutType type = pr.isSetTblLayout() ? pr.getTblLayout() : pr.addNewTblLayout();
-    type.setType(STTblLayoutType.FIXED);
-    CTTblWidth tblW = pr.isSetTblW() ? pr.getTblW() : pr.addNewTblW();
+    CTTblWidth tblInd = tblPr.isSetTblInd() ? tblPr.getTblInd() : tblPr.addNewTblInd();
+    tblInd.setType(STTblWidth.DXA);
+    tblInd.setW(java.math.BigInteger.valueOf(-283));
+
+    double leftRatio = section.getLeftColumnRatio() != null ? section.getLeftColumnRatio() : 0.65;
+
+    int targetWidthTwips = availableWidthTwips + 567;
+    int leftWidth = (int) (targetWidthTwips * leftRatio);
+    int rightWidth = targetWidthTwips - leftWidth;
+
+    tblPr.addNewTblLayout().setType(STTblLayoutType.FIXED);
+    CTTblWidth tblW = tblPr.addNewTblW();
     tblW.setType(STTblWidth.DXA);
-    tblW.setW(BigInteger.valueOf(leftTwips + rightTwips));
-    CTTblGrid grid = ctTbl.getTblGrid();
-    if (grid == null)
-      grid = ctTbl.addNewTblGrid();
-    if (grid.sizeOfGridColArray() == 0) {
-      grid.addNewGridCol().setW(BigInteger.valueOf(leftTwips));
-      grid.addNewGridCol().setW(BigInteger.valueOf(rightTwips));
+    tblW.setW(java.math.BigInteger.valueOf(targetWidthTwips));
+
+    XWPFTableCell leftCell = row.getCell(0);
+    CTTcPr leftTcPr = leftCell.getCTTc().isSetTcPr() ? leftCell.getCTTc().getTcPr() : leftCell.getCTTc().addNewTcPr();
+    CTTblWidth leftTcW = leftTcPr.isSetTcW() ? leftTcPr.getTcW() : leftTcPr.addNewTcW();
+    leftTcW.setType(STTblWidth.DXA);
+    leftTcW.setW(java.math.BigInteger.valueOf(leftWidth));
+
+    if (!leftCell.getParagraphs().isEmpty())
+      leftCell.removeParagraph(0);
+    if (section.getMainContent() != null)
+      processSections(doc, section.getMainContent(), leftCell, leftWidth, false);
+    cleanCellParagraphs(leftCell);
+
+    XWPFTableCell rightCell = row.getCell(1);
+    CTTcPr rightTcPr = rightCell.getCTTc().isSetTcPr() ? rightCell.getCTTc().getTcPr() : rightCell.getCTTc().addNewTcPr();
+    CTTblWidth rightTcW = rightTcPr.isSetTcW() ? rightTcPr.getTcW() : rightTcPr.addNewTcW();
+    rightTcW.setType(STTblWidth.DXA);
+    rightTcW.setW(java.math.BigInteger.valueOf(rightWidth));
+
+    if (!rightCell.getParagraphs().isEmpty())
+      rightCell.removeParagraph(0);
+    if (section.getSidebarContent() != null)
+      processSections(doc, section.getSidebarContent(), rightCell, rightWidth, true);
+    cleanCellParagraphs(rightCell);
+
+    doc.createParagraph();
+  }
+
+  private void generateAndInsertChart(XWPFDocument doc, XWPFTableCell cell, XWPFParagraph p, ChartConfiguration config, int width,
+    boolean isSidebar) throws Exception {
+    if (config.getTitle() != null && !config.getTitle().isEmpty()) {
+      XWPFRun rTitle = p.createRun();
+      rTitle.setText(config.getTitle());
+      rTitle.setBold(true);
+      rTitle.setFontSize(11);
+      p = (cell != null) ? cell.addParagraph() : doc.createParagraph();
+      if (isSidebar)
+        p.setAlignment(ParagraphAlignment.CENTER);
     }
-  }
 
-  private void setRowMinHeight(XWPFTableRow row, int heightTwips) {
-    CTTrPr trPr = row.getCtRow().isSetTrPr() ? row.getCtRow().getTrPr() : row.getCtRow().addNewTrPr();
-    CTHeight ht = trPr.sizeOfTrHeightArray() > 0 ? trPr.getTrHeightArray(0) : trPr.addNewTrHeight();
-    ht.setVal(BigInteger.valueOf(heightTwips));
-  }
+    ChartGenerationService chartGen = new ChartGenerationService();
+    File chartImage = chartGen.generateChartImage(config);
 
-  private void setCellWidth(XWPFTableCell cell, int widthTwips) {
-    CTTcPr pr = cell.getCTTc().isSetTcPr() ? cell.getCTTc().getTcPr() : cell.getCTTc().addNewTcPr();
-    CTTblWidth width = pr.isSetTcW() ? pr.getTcW() : pr.addNewTcW();
-    width.setType(STTblWidth.DXA);
-    width.setW(BigInteger.valueOf(widthTwips));
-  }
+    try (FileInputStream is = new FileInputStream(chartImage)) {
+      XWPFRun r = p.createRun();
+      double maxDisplayWidthEMU = (width * 635.0) * 0.95;
+      double aspectRatio = (double) config.getHeight() / config.getWidth();
+      int finalWidthEMU = (int) maxDisplayWidthEMU;
+      int finalHeightEMU = (int) (finalWidthEMU * aspectRatio);
 
-  private void setCellTransparent(XWPFTableCell cell) {
-    CTTcPr pr = cell.getCTTc().isSetTcPr() ? cell.getCTTc().getTcPr() : cell.getCTTc().addNewTcPr();
-    CTShd shd = pr.isSetShd() ? pr.getShd() : pr.addNewShd();
-    shd.setVal(STShd.CLEAR);
-    shd.setColor("auto");
-    shd.setFill("auto");
+      r.addPicture(is, XWPFDocument.PICTURE_TYPE_PNG, chartImage.getName(), finalWidthEMU, finalHeightEMU);
+    } finally {
+      if (chartImage.exists())
+        chartImage.delete();
+    }
   }
 }

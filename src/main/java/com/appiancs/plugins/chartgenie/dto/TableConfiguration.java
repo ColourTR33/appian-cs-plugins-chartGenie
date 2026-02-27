@@ -4,16 +4,16 @@ import java.util.List;
 
 public class TableConfiguration {
   private List<String> headers;
-  private List<List<String>> rows; // Data: List of Rows, where each Row is a List of Cells
-  private List<Integer> columnWidths; // Optional: Percentages (e.g., [30, 70])
-
-  // Styling
-  private String headerBackgroundColor; // e.g., "2F5496"
-  private String headerTextColor; // e.g., "FFFFFF"
-  private String oddRowColor; // e.g., "F2F2F2" (Zebra striping)
+  private List<List<TableCellConfig>> rows;
+  private List<Integer> columnWidths;
+  private String headerBackgroundColor;
+  private String headerTextColor; // Fixes Compilation Error
+  private String oddRowColor;
   private boolean bordersEnabled = true;
 
-  // ... Getters and Setters for all ...
+  public TableConfiguration() {
+  }
+
   public List<String> getHeaders() {
     return headers;
   }
@@ -22,12 +22,20 @@ public class TableConfiguration {
     this.headers = headers;
   }
 
-  public List<List<String>> getRows() {
+  public List<List<TableCellConfig>> getRows() {
     return rows;
   }
 
-  public void setRows(List<List<String>> rows) {
+  public void setRows(List<List<TableCellConfig>> rows) {
     this.rows = rows;
+  }
+
+  public List<Integer> getColumnWidths() {
+    return columnWidths;
+  }
+
+  public void setColumnWidths(List<Integer> columnWidths) {
+    this.columnWidths = columnWidths;
   }
 
   public String getHeaderBackgroundColor() {
@@ -40,7 +48,7 @@ public class TableConfiguration {
 
   public String getHeaderTextColor() {
     return headerTextColor;
-  }
+  } // Fixes Compilation Error
 
   public void setHeaderTextColor(String headerTextColor) {
     this.headerTextColor = headerTextColor;

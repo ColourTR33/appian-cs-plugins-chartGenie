@@ -1,109 +1,90 @@
 package com.appiancs.plugins.chartgenie.service;
 
-import org.apache.poi.xwpf.usermodel.*;
+import org.apache.poi.xwpf.usermodel.UnderlinePatterns;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
+/**
+ * Parses basic HTML tags (<b>, <i>, <br/>
+ * , <span style="color:#HEX">)
+ * into Word document styling for rich text table cells.
+ */
 public class HtmlRichTextRenderer {
 
-  public void render(XWPFDocument doc, XWPFTableCell cell, String html) {
-    if (html == null || html.isEmpty())
+  public void render(XWPFDocument doc, XWPFTableCell cell, String htmlContent) {
+    if (htmlContent == null || htmlContent.isEmpty()) {
       return;
+    }
 
-    Document soupDoc = Jsoup.parseBodyFragment(html);
-    Element body = soupDoc.body();
+    XWPFParagraph currentParagraph = cell.getParagraphs().isEmpty() ? cell.addParagraph() : cell.getParagraphs().get(0);
 
-    for (Node node : body.childNodes()) {
-      if (node instanceof Element) {
-        Element el = (Element) node;
-        switch (el.tagName().toLowerCase()) {
-          case "ul":
-          case "ol":
-            renderList(doc, cell, el);
-            break;
-          case "p":
-          case "div":
-            XWPFParagraph p = createParagraph(doc, cell);
-            processInlineNodes(p, el, false, false, null);
-            break;
-          case "br":
-            createParagraph(doc, cell);
-            break;
-          default:
-            // Inline element at root (e.g. "<b>Title:</b>")
-            XWPFParagraph defaultP = createParagraph(doc, cell);
-            processInlineNodes(defaultP, el, false, false, null);
-        }
-      } else if (node instanceof TextNode) {
-        XWPFParagraph p = createParagraph(doc, cell);
-        processInlineNodes(p, node, false, false, null);
-      }
+    // If there's no HTML, just set plain text to save processing time
+    if (!htmlContent.contains("<") || !htmlContent.contains(">")) {
+      currentParagraph.createRun().setText(htmlContent);
+      return;
+    }
+
+    // Parse HTML fragment
+    Document jsoupDoc = Jsoup.parseBodyFragment(htmlContent);
+
+    // Iterate through nodes and apply styles
+    for (Node node : jsoupDoc.body().childNodes()) {
+      processNode(node, currentParagraph);
     }
   }
 
-  private void renderList(XWPFDocument doc, XWPFTableCell cell, Element listElement) {
-    for (Element li : listElement.children()) {
-      if (!li.tagName().equals("li"))
-        continue;
-
-      XWPFParagraph p = createParagraph(doc, cell);
-      p.setIndentationLeft(720); // Indent
-
-      XWPFRun bullet = p.createRun();
-      bullet.setText("•  ");
-
-      processInlineNodes(p, li, false, false, null);
-    }
-  }
-
-  private void processInlineNodes(XWPFParagraph p, Node node, boolean isBold, boolean isItalic, String color) {
+  private void processNode(Node node, XWPFParagraph paragraph) {
     if (node instanceof TextNode) {
-      String text = ((TextNode) node).text();
-      if (!text.isEmpty()) {
-        XWPFRun run = p.createRun();
-        run.setText(text);
-        if (isBold)
-          run.setBold(true);
-        if (isItalic)
-          run.setItalic(true);
-        if (color != null)
-          run.setColor(color.replace("#", ""));
-        run.setFontSize(10);
-        run.setFontFamily("Arial");
+      String text = ((TextNode) node).getWholeText();
+      if (!text.trim().isEmpty() || text.contains(" ")) {
+        paragraph.createRun().setText(text);
       }
     } else if (node instanceof Element) {
-      Element el = (Element) node;
-      String tagName = el.tagName().toLowerCase();
+      Element element = (Element) node;
+      String tagName = element.tagName().toLowerCase();
 
-      boolean newBold = isBold || tagName.equals("b") || tagName.equals("strong");
-      boolean newItalic = isItalic || tagName.equals("i") || tagName.equals("em");
-      String newColor = color;
-
-      if (el.hasAttr("style") && el.attr("style").toLowerCase().contains("color")) {
-        // Simplified style parsing for brevity
-        String style = el.attr("style").toLowerCase();
-        int colorIndex = style.indexOf("color:");
-        if (colorIndex >= 0) {
-          int end = style.indexOf(";", colorIndex);
-          if (end == -1)
-            end = style.length();
-          newColor = style.substring(colorIndex + 6, end).trim();
+      if (tagName.equals("br")) {
+        paragraph.createRun().addBreak();
+      } else {
+        // Apply inline styles to children
+        for (Node child : element.childNodes()) {
+          if (child instanceof TextNode) {
+            XWPFRun run = paragraph.createRun();
+            applyStyles(run, element);
+            run.setText(((TextNode) child).getWholeText());
+          } else if (child instanceof Element && ((Element) child).tagName().equalsIgnoreCase("br")) {
+            paragraph.createRun().addBreak();
+          }
         }
-      }
-
-      if (tagName.equals("br"))
-        p.createRun().addBreak();
-
-      for (Node child : el.childNodes()) {
-        processInlineNodes(p, child, newBold, newItalic, newColor);
       }
     }
   }
 
-  private XWPFParagraph createParagraph(XWPFDocument doc, XWPFTableCell cell) {
-    return (cell != null) ? cell.addParagraph() : doc.createParagraph();
+  private void applyStyles(XWPFRun run, Element element) {
+    String tagName = element.tagName().toLowerCase();
+
+    if (tagName.equals("b") || tagName.equals("strong")) {
+      run.setBold(true);
+    } else if (tagName.equals("i") || tagName.equals("em")) {
+      run.setItalic(true);
+    } else if (tagName.equals("u")) {
+      run.setUnderline(UnderlinePatterns.SINGLE);
+    } else if (tagName.equals("span")) {
+      String style = element.attr("style");
+      // Extract Hex color from format: style='color:#FF0000'
+      if (style.contains("color")) {
+        String hexColor = style.replaceAll(".*color:\\s*#([A-Fa-f0-9]{6}).*", "$1");
+        if (hexColor.length() == 6) {
+          run.setColor(hexColor);
+        }
+      }
+    }
   }
 }

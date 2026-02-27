@@ -8,29 +8,15 @@ import com.appiancs.plugins.chartgenie.dto.TableConfiguration;
 public class ReportSection {
   private String type;
   private String text;
-
-  // REFACTOR: Renamed from 'color' to 'accentColor' for clarity.
-  // Usage: Background color for Badges, or Text color for specific highlights.
-  private String accentColor;
-
+  private String accentColor; // Fixes Compilation Error
   private ChartConfiguration chartConfig;
   private List<ReportSection> sidebarContent;
   private List<ReportSection> mainContent;
-
   private TableConfiguration tableConfig;
-
-  public TableConfiguration getTableConfig() {
-    return tableConfig;
-  }
-
-  public void setTableConfig(TableConfiguration tableConfig) {
-    this.tableConfig = tableConfig;
-  }
+  private Double leftColumnRatio;
 
   public ReportSection() {
   }
-
-  // --- Getters & Setters ---
 
   public String getType() {
     return type;
@@ -50,10 +36,18 @@ public class ReportSection {
 
   public String getAccentColor() {
     return accentColor;
-  }
+  } // Fixes Compilation Error
 
   public void setAccentColor(String accentColor) {
     this.accentColor = accentColor;
+  }
+
+  public Double getLeftColumnRatio() {
+    return leftColumnRatio;
+  }
+
+  public void setLeftColumnRatio(Double leftColumnRatio) {
+    this.leftColumnRatio = leftColumnRatio;
   }
 
   public ChartConfiguration getChartConfig() {
@@ -78,5 +72,23 @@ public class ReportSection {
 
   public void setMainContent(List<ReportSection> mainContent) {
     this.mainContent = mainContent;
+  }
+
+  public TableConfiguration getTableConfig() {
+    return tableConfig;
+  }
+
+  public void setTableConfig(TableConfiguration tableConfig) {
+    this.tableConfig = tableConfig;
+  }
+
+  private String title;
+
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
   }
 }
