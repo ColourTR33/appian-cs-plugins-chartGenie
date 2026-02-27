@@ -3,11 +3,14 @@ package com.appiancs.plugins.chartgenie.dto;
 import java.util.List;
 
 public class ChartConfiguration {
-  // Core Data
+  // Core Data (Legacy / Single Series)
   private String chartType;
   private String title;
   private List<String> categories;
   private List<Number> values;
+
+  // ENTERPRISE FIX: Multi-Series Data (Required for Grouped/Stacked Audit Charts)
+  private List<ChartDataPoint> multiSeriesData;
 
   // Dimensions (Integer for null checks)
   private Integer width;
@@ -20,7 +23,22 @@ public class ChartConfiguration {
   private String orientation;
   private Boolean dataLabelsEnabled;
 
-  // NEW FIELD (Required for Service Class)
+  // ENTERPRISE FIX: Visual Customizations
+  private String backgroundColor; // e.g., "F2F2F2"
+  private String legendPosition; // "BOTTOM", "RIGHT", "TOP", "LEFT", "NONE"
+
+  // Add this field and its getter/setter
+  private Integer baseFontSize; // e.g., 24 (Default to something large if scaled down)
+
+  public Integer getBaseFontSize() {
+    return baseFontSize;
+  }
+
+  public void setBaseFontSize(Integer baseFontSize) {
+    this.baseFontSize = baseFontSize;
+  }
+
+  // Required for Service Class
   private String metrics;
 
   // --- Getters and Setters ---
@@ -55,6 +73,14 @@ public class ChartConfiguration {
 
   public void setValues(List<Number> values) {
     this.values = values;
+  }
+
+  public List<ChartDataPoint> getMultiSeriesData() {
+    return multiSeriesData;
+  }
+
+  public void setMultiSeriesData(List<ChartDataPoint> multiSeriesData) {
+    this.multiSeriesData = multiSeriesData;
   }
 
   public Integer getWidth() {
@@ -111,6 +137,22 @@ public class ChartConfiguration {
 
   public void setDataLabelsEnabled(Boolean dataLabelsEnabled) {
     this.dataLabelsEnabled = dataLabelsEnabled;
+  }
+
+  public String getBackgroundColor() {
+    return backgroundColor;
+  }
+
+  public void setBackgroundColor(String backgroundColor) {
+    this.backgroundColor = backgroundColor;
+  }
+
+  public String getLegendPosition() {
+    return legendPosition;
+  }
+
+  public void setLegendPosition(String legendPosition) {
+    this.legendPosition = legendPosition;
   }
 
   public String getMetrics() {

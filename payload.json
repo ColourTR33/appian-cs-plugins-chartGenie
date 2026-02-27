@@ -1,0 +1,273 @@
+{
+  "settings": {
+    "orientation": "LANDSCAPE",
+    "pageSize": "A4",
+    "headerText": "BARCLAYS INTERNAL AUDIT (BIA) | FORMAL REPORT",
+    "headerColor": "ffffff",
+    "footerText": "CONFIDENTIAL - Barclays Internal Audit Findings"
+  },
+  "sections": [
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "leftColumnRatio": 0.78,
+      "mainContent": [
+        {
+          "type": "POSITION_TABLE",
+          "tableConfig": {
+            "headers": [],
+            "columnWidths": [50, 50],
+            "bordersEnabled": false,
+            "columns": [
+                { "type": "HEADING2", "text": "Control Environment" },
+                {
+                  "type": "STATUS_BADGE",
+                  "title": "Control Environment Rating:",
+                  "text": "NEEDS IMPROVEMENT",
+                  "accentColor": "FFC000"
+                }
+            ]
+          }
+        },
+        {
+          "type": "TEXT",
+          "text": "This sentence must be a separated paragraph to any other narrative underneath and succinctly explain the driver of the opinion – this sentence will be used for BAC reporting summaries: The <insert rating> rating over <insert in scope area> is driven by <provide summary>."
+        },
+        {
+          "type": "TEXT",
+          "text": "For Post-Implementation Change Audits, clearly articulate if the rating is driven as a result of 1) programme / project governance (i.e. the Programme is the adverse rating driver), or 2) what has been delivered by the programme / project."
+        },
+        {
+          "type": "TEXT",
+          "text": "This next section can be used to further expand on the drivers for the rating, allowing the executive reader to understand the basis of BIA’s opinion and why the rating is appropriate and not more or less adverse. Ensure that the ‘so what’ is answered and clear – this should be insightful and go beyond the surface level observations or a list of facts."
+        },
+        {
+          "type": "TEXT",
+          "text": "Additional points for consideration:\n•\tInform the AE about essential details and actions required, prioritising key information.\n•\tStick to the facts and avoid jargon, acronyms and technical language"
+        },
+        { "type": "HEADING2", "text": "Approach to Risk and Control" },
+        {
+          "type": "TEXT",
+          "text": "•\tConclude if Management needs to improve its effectiveness at self-identification of issues (with rationale) or conclude if they are effective at self-identification of issues (with rationale).\n\n•\tConclude if Management needs to improve its effectiveness at reducing risk in their processes through simplification and/or automation of controls (with rationale) or conclude if they are effective (with rationale). If automated controls were not tested by BIA, explain why.\n\n•\tInclude narrative on Management’s overall approach to risk and control.\n\n•\tIf the report is adverse, to add value and insight, BIA should comment on the quality of the controls in the Control Library."
+        }
+      ],
+      "sidebarContent": [
+        { "type": "HEADING", "text": "Data Indicators" },
+        {
+          "type": "CHART",
+          "chartConfig": {
+            "chartType": "DONUT",
+            "title": "Automation of Controls Tested",
+            "width": 250,
+            "height": 250,
+            "multiSeriesData": [
+              { "category": "Manual Controls", "value": 67 },
+              { "category": "Automated", "value": 33 }
+            ]
+          }
+        },
+        {
+          "type": "CHART",
+          "chartConfig": {
+            "chartType": "PIE",
+            "title": "Weighted Issue Indicator",
+            "width": 250,
+            "height": 250,
+            "multiSeriesData": [
+              { "category": "BIA", "value": 70 },
+              { "category": "Regulatory", "value": 17 },
+              { "category": "1LoD / 2LoD", "value": 13 }
+            ]
+          }
+        }
+      ]
+    },
+    { "type": "PAGE_BREAK" },
+    { "type": "HEADING", "text": "Additional Context" },
+    { "type": "HEADING2", "text": "Business Context" },
+    {
+      "type": "TEXT",
+      "text": "Provide a brief description of the area reviewed, the business objectives, key stakeholders and regulatory environment where applicable."
+    },
+    { "type": "HEADING2", "text": "Audit Scope" },
+    {
+      "type": "TEXT",
+      "text": "Provide a brief description of the audit scope and list the risk statements/hypothesis. Where data analytics was used as part of testing, this must be stated."
+    },
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "leftColumnRatio": 0.45,
+      "mainContent": [
+        { "type": "HEADING", "text": "SMF and Legal Entity Impact" },
+        {
+          "type": "TEXT",
+          "text": "1.\tInclude commentary in the below table on the impact of the audit opinion (CE) and issues on the BBPLC, BBUK, BBI, IHC, BBDE Legal Entities. Factors to include but limited to:\n•\tDifferences in the operation or frequency of the control to the legal entity \n•\tImpact of CE or audit issues that LE Service Recipient should be aware of\n•\tImpact of control homogeneity where applicable\n•\tRegulatory requirements or regulatory requests to provide coverage\n2.\tAlso include commentary where the relevance of the audit opinion differs across legal entities. If the driver of an adverse assessment related to findings \nin one legal entity, but not another, specifically state this. For example:\n•\tThe critical issues raised in this audit have similar significance to both BBPLC and BBUKPLC.\n•\tThe issues in this audit predominantly impact BBPLC, due to the mitigating controls in place in BBUKPLC.\n•\tThe issues in this audit impact the availability of systems used for retail customer processes, so have greater impact on BBUKPLC than BBPLC.\n•\tBBPLC represents 80% of risk limits covered in this audit, BBUKPLC represents 20%"
+        },
+        {
+          "type": "REPORT_TABLE",
+          "tableConfig": {
+            "headers": [],
+            "columnWidths": [25, 10, 15, 50],
+            "bordersEnabled": true,
+            "rows": [
+              [
+                { "text": "<b>Legal Entity Impact</b>", "colspan": 4, "backgroundColor": "00395D", "textColor": "FFFFFF" }
+              ],
+              [
+                { "text": "<b>Primary Impacted Legal Entity</b>", "backgroundColor": "F2F2F2" },
+                { "text": "[X]<br/>[ ]<br/>[ ]<br/>[ ]<br/>[ ]" },
+                { "text": "BBPLC<br/>BBUK<br/>BBI<br/>IHC<br/>BBDE" },
+                { "text": "The critical issues raised in this audit have similar significance to BBPLC and BBUK. BBPLC represents 80% of risk limits covered." }
+              ],
+              [
+                { "text": "<b>Other Impacted Legal Entities</b>", "backgroundColor": "F2F2F2" },
+                { "text": "[ ]<br/>[X]<br/>[ ]<br/>[ ]<br/>[ ]" },
+                { "text": "BBPLC<br/>BBUK<br/>BBI<br/>IHC<br/>BBDE" },
+                { "text": "Minor impact isolated to local retail branches within the UK perimeter." }
+              ]
+            ]
+          }
+        }
+      ],
+      "sidebarContent": [
+        { "type": "TEXT", "text": "BIA has assessed this audit report is most relevant to the following SMF or SMF equivalent role holders:" },
+        {
+          "type": "REPORT_TABLE",
+          "tableConfig": {
+            "headers": ["Senior Manager", "Role", "SMF(s)", "Legal Entity (ies)"],
+            "headerBackgroundColor": "00395D",
+            "headerTextColor": "FFFFFF",
+            "oddRowColor": "F2F2F2",
+            "columnWidths": [25, 35, 15, 25],
+            "rows": [
+              [
+                { "text": "Jane Doe" },
+                { "text": "Head of Global Payments" },
+                { "text": "SMF24" },
+                { "text": "BBPLC" }
+              ],
+              [
+                { "text": "John Smith" },
+                { "text": "Chief Information Security Officer" },
+                { "text": "SMF24" },
+                { "text": "BBUK" }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    { "type": "PAGE_BREAK" },
+    { "type": "HEADING", "text": "3. Issues Summary" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["#", "Issue Rating", "Issue Title", "Is This a Repeat Issue", "Issue Due Date"],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "oddRowColor": "F2F2F2",
+        "columnWidths": [5, 20, 45, 15, 15],
+        "rows": [
+          [
+            { "text": "1" },
+            { "text": "<span style='color:#FF0000'><b>Critical</b></span>" },
+            { "text": "Unauthorized Admin Access via OIDC" },
+            { "text": "No" },
+            { "text": "31-Dec-2026" }
+          ],
+          [
+            { "text": "2" },
+            { "text": "<span style='color:#FFC000'><b>Needs Improvement</b></span>" },
+            { "text": "Firewall Rule Lifecycle Management" },
+            { "text": "Yes" },
+            { "text": "15-Oct-2026" }
+          ]
+        ]
+      }
+    },
+    { "type": "PAGE_BREAK" },
+    { "type": "HEADING", "text": "4. BIA Issues Details" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": [],
+        "columnWidths": [20, 25, 15, 15, 12, 13],
+        "bordersEnabled": true,
+        "rows": [
+          [
+            { "text": "<b>Detail of Barclays Internal Audit (BIA) Raised Issues</b>", "colspan": 6, "backgroundColor": "00395D", "textColor": "FFFFFF" }
+          ],
+          [
+            { "text": "<b>Issue</b>", "colspan": 6, "backgroundColor": "00AEEF", "textColor": "FFFFFF" }
+          ],
+          [
+            { "text": "<b>Title:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Unauthorized Admin Access via OIDC" },
+            { "text": "<b>Due Date:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "31-Dec-2026" },
+            { "text": "<b>Milestone:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Yes" }
+          ],
+          [
+            { "text": "<b>Rating:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "<span style='color:#FF0000'><b>Critical</b></span>" },
+            { "text": "<b>Issue Owner:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Joe Bloggs, MD" },
+            { "text": "<b>Issue ID:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "ISS-2026-001" }
+          ],
+          [
+            { "text": "<b>BIA to validate:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Yes", "colspan": 5 }
+          ],
+          [
+            { "text": "<b>Was the issue identified through BIA Data Analytics Testing?</b>", "colspan": 5, "backgroundColor": "F2F2F2" },
+            { "text": "No" }
+          ],
+          [
+            { "text": "<b>What has been identified</b>", "backgroundColor": "F2F2F2" },
+            { "text": "The authentication module failed to validate tokens correctly across the distributed environment, allowing lower-tier users to escalate privileges.", "colspan": 5 }
+          ],
+          [
+            { "text": "<b>Why it matters</b>", "backgroundColor": "F2F2F2" },
+            { "text": "High probability of data leakage and regulatory fines.", "colspan": 5 }
+          ],
+          [
+            { "text": "<b>Root Cause</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Legacy role definitions were not migrated to the new identity provider.", "colspan": 5 }
+          ],
+          [
+            { "text": "<b>Relevant context</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Impacts the core ledger processing systems.", "colspan": 5 }
+          ],
+          [
+            { "text": "<b>Owned by Legal Entity</b>", "backgroundColor": "F2F2F2" },
+            { "text": "BBPLC" },
+            { "text": "<b>Impacted Legal Entities</b>", "backgroundColor": "F2F2F2" },
+            { "text": "BBUK", "colspan": 3 }
+          ],
+          [
+            { "text": "<b>Management Action Plan</b>", "colspan": 6, "backgroundColor": "00AEEF", "textColor": "FFFFFF" }
+          ],
+          [
+            { "text": "<b>Title:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Implement MFA and fix OIDC rules" },
+            { "text": "<b>Due Date:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "30-Nov-2026" },
+            { "text": "<b>Milestone:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Yes" }
+          ],
+          [
+            { "text": "<b>Action Owner:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "Joe Bloggs, MD", "colspan": 2 },
+            { "text": "<b>Action ID:</b>", "backgroundColor": "F2F2F2" },
+            { "text": "ACT-2026-001A", "colspan": 2 }
+          ],
+          [
+            { "text": "<b>Action Plan Description</b>", "backgroundColor": "F2F2F2" },
+            { "text": "DevOps will rewrite the token validation logic and mandate Multi-Factor Authentication for all console access.", "colspan": 5 }
+          ]
+        ]
+      }
+    }
+  ]
+}
