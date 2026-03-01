@@ -4,8 +4,11 @@ import java.awt.*;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
@@ -37,7 +40,7 @@ public class BarChartStrategy implements ChartGeneratorStrategy {
     }
 
     JFreeChart chart = ChartFactory.createBarChart(
-      config.getTitle(),
+      null,
       null, // X-Axis Label
       null, // Y-Axis Label
       dataset);
@@ -54,10 +57,25 @@ public class BarChartStrategy implements ChartGeneratorStrategy {
       DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE));
 
     // Clean White Background formatting
-    plot.setBackgroundPaint(Color.WHITE);
-    chart.setBackgroundPaint(Color.WHITE);
+    plot.setBackgroundPaint(new Color(0, 0, 0, 0));
+    chart.setBackgroundPaint(null);
     plot.setOutlineVisible(false);
-    plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+
+    // --- THE FIX: SCALE UP THE AXIS FONTS ---
+    Font largeAxisFont = new Font("SansSerif", Font.PLAIN, 30);
+
+    CategoryAxis domainAxis = plot.getDomainAxis(); // X-Axis (Categories)
+    domainAxis.setTickLabelFont(largeAxisFont);
+
+    ValueAxis rangeAxis = plot.getRangeAxis(); // Y-Axis (Numbers)
+    rangeAxis.setTickLabelFont(largeAxisFont);
+    // ----------------------------------------
+
+    LegendTitle legend = chart.getLegend();
+    if (legend != null) {
+      legend.setBackgroundPaint(null); // Transparent legend background
+      legend.setItemFont(new Font("SansSerif", Font.BOLD, 50));
+    }
 
     return chart;
   }

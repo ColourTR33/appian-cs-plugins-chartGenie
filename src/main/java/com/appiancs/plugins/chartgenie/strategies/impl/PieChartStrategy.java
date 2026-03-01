@@ -1,6 +1,7 @@
 package com.appiancs.plugins.chartgenie.strategies.impl;
 
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
 
 import org.jfree.chart.ChartFactory;
@@ -8,6 +9,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.general.DefaultPieDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
@@ -58,15 +60,30 @@ public class PieChartStrategy implements ChartGeneratorStrategy {
     // CRITICAL FIX: Set Backgrounds to NULL to make the image transparent
     plot.setBackgroundPaint(null);
     chart.setBackgroundPaint(null);
+    LegendTitle legend = chart.getLegend();
+    if (legend != null) {
+      legend.setBackgroundPaint(null); // Transparent legend background
+      legend.setItemFont(new Font("SansSerif", Font.BOLD, 50));
+      Shape largeLegendBox = new Ellipse2D.Double(-10, -10, 50, 50);
+      plot.setLegendItemShape(largeLegendBox);
+    }
+    ;
+
     StandardPieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator(
       "{2}",
       NumberFormat.getNumberInstance(),
       NumberFormat.getPercentInstance());
     plot.setLabelGenerator(labelGenerator);
 
+    plot.setLabelFont(new Font("SansSerif", Font.BOLD, 50));
+    plot.setLabelPaint(Color.WHITE);
+    plot.setLabelShadowPaint(null);
+    plot.setLabelBackgroundPaint(null);
     plot.setOutlineVisible(false);
     plot.setShadowPaint(null);
-    plot.setLabelBackgroundPaint(Color.LIGHT_GRAY);
+    plot.setLabelGap(0.02);
+    plot.setLabelOutlinePaint(null);
+    plot.setSimpleLabels(true);
 
     return chart;
   }

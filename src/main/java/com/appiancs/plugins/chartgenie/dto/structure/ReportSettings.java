@@ -1,53 +1,35 @@
 package com.appiancs.plugins.chartgenie.dto.structure;
 
 public class ReportSettings {
-  private Boolean qrCodeEnabled;
-  private String qrUrl;
   private String headerText;
-  private String headerFont;
-  private String headerColor;
+  private String subheaderText;
   private String footerText;
-  private String pageSize; // "A4" or "LETTER"
-  private String orientation;
+  private String headerColor;
+  private String orientation; // PORTRAIT or LANDSCAPE
+  private String pageSize; // A4 or LETTER
 
-  public Boolean getQrCodeEnabled() {
-    return qrCodeEnabled;
-  }
+  // NEW FIELDS FOR THE RATING
+  private String headerRating;
+  private boolean showRatingInHeader;
 
-  public String getPageSize() {
-    return pageSize;
-  }
+  private boolean qrCodeEnabled;
+  private String qrUrl;
 
-  public void setPageSize(String pageSize) {
-    this.pageSize = pageSize;
-  }
-
-  public String getOrientation() {
-    return orientation;
-  }
-
-  public void setOrientation(String orientation) {
-    this.orientation = orientation;
-  }
-
-  public void setQrCodeEnabled(Boolean qrCodeEnabled) {
-    this.qrCodeEnabled = qrCodeEnabled;
-  }
-
-  public String getQrUrl() {
-    return qrUrl;
-  }
-
-  public void setQrUrl(String qrUrl) {
-    this.qrUrl = qrUrl;
-  }
-
+  // Standard Getters and Setters
   public String getHeaderText() {
     return headerText;
   }
 
   public void setHeaderText(String headerText) {
     this.headerText = headerText;
+  }
+
+  public String getSubheaderText() {
+    return subheaderText;
+  }
+
+  public void setSubheaderText(String subheaderText) {
+    this.subheaderText = subheaderText;
   }
 
   public String getFooterText() {
@@ -66,11 +48,51 @@ public class ReportSettings {
     this.headerColor = headerColor;
   }
 
-  public String getHeaderFont() {
-    return headerFont;
+  public String getOrientation() {
+    return orientation;
   }
 
-  public void setHeaderFont(String headerFont) {
-    this.headerFont = headerFont;
+  public void setOrientation(String orientation) {
+    this.orientation = orientation;
+  }
+
+  public String getPageSize() {
+    return pageSize;
+  }
+
+  public void setPageSize(String pageSize) {
+    this.pageSize = pageSize;
+  }
+
+  public String getHeaderRating() {
+    return headerRating;
+  }
+
+  public void setHeaderRating(String headerRating) {
+    this.headerRating = headerRating;
+  }
+
+  public boolean isShowRatingInHeader() {
+    return showRatingInHeader;
+  }
+
+  public void setShowRatingInHeader(boolean showRatingInHeader) {
+    this.showRatingInHeader = showRatingInHeader;
+  }
+
+  public boolean isQrCodeEnabled() {
+    return qrCodeEnabled;
+  }
+
+  public void setQrCodeEnabled(boolean qrCodeEnabled) {
+    this.qrCodeEnabled = qrCodeEnabled;
+  }
+
+  public String getQrUrl() {
+    return qrUrl;
+  }
+
+  public void setQrUrl(String qrUrl) {
+    this.qrUrl = qrUrl;
   }
 }

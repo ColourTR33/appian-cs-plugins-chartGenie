@@ -49,7 +49,7 @@ public class GenerateChartImage extends BaseSmartService {
       }
 
       config.setPrimaryColor(primaryColor);
-      config.setWidth(800);
+      config.setWidth(600);
       config.setHeight(600);
       config.setTitle(targetName);
 

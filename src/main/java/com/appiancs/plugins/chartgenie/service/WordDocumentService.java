@@ -33,7 +33,7 @@ public class WordDocumentService {
 
       if (settings != null) {
         currentAvailableWidth = applyPageSettings(doc, settings.getPageSize(), settings.getOrientation());
-        applyHeaderFooter(doc, settings.getHeaderText(), settings.getHeaderColor(), settings.getFooterText());
+        applyHeaderFooter(doc, settings, settings.getHeaderColor(), settings.getFooterText());
       }
 
       if (doc.getBodyElements().size() > 0 && doc.getBodyElements().get(0).getElementType() == BodyElementType.PARAGRAPH) {
@@ -52,6 +52,34 @@ public class WordDocumentService {
         processSections(doc, sections, null, currentAvailableWidth, false);
       }
 
+      // ---------------- NEW CLEANUP BLOCK ----------------
+      // 1. Vertically center text in ALL tables (Fixes Appendix)
+      for (XWPFTable t : doc.getTables()) {
+        for (XWPFTableRow r : t.getRows()) {
+          for (XWPFTableCell c : r.getTableCells()) {
+            c.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+            // Force internal paragraph margins to 0 for true centering
+            for (XWPFParagraph cp : c.getParagraphs()) {
+              cp.setSpacingBefore(0);
+              cp.setSpacingAfter(0);
+            }
+          }
+        }
+      }
+
+      // 2. Eradicate trailing blank pages
+      int lastIdx = doc.getBodyElements().size() - 1;
+      while (lastIdx >= 0 && doc.getBodyElements().get(lastIdx).getElementType() == BodyElementType.PARAGRAPH) {
+        XWPFParagraph lastPara = (XWPFParagraph) doc.getBodyElements().get(lastIdx);
+        if (lastPara.getText().trim().isEmpty() && lastPara.getRuns().isEmpty() && !lastPara.isPageBreak()) {
+          doc.removeBodyElement(lastIdx);
+          lastIdx--;
+        } else {
+          break;
+        }
+      }
+      // ----------------------------------------------------
+
       File outputFile = File.createTempFile("genie_report_", ".docx");
       try (FileOutputStream out = new FileOutputStream(outputFile)) {
         doc.write(out);
@@ -66,8 +94,10 @@ public class WordDocumentService {
       String type = section.getType() != null ? section.getType().toUpperCase().trim() : "TEXT";
 
       XWPFParagraph p = null;
-      if (!type.equals("REPORT_TABLE") && !type.equals("RICH_TEXT") && !type.equals("SIDEBAR_LAYOUT") && !type.equals("HEADING2") &&
-        !type.equals("STATUS_BADGE")) {
+      // Add PAGE_BREAK here so it doesn't create orphan paragraphs
+      if (!type.equals("REPORT_TABLE") && !type.equals("RICH_TEXT") && !type.equals("SIDEBAR_LAYOUT") &&
+        !type.equals("HEADING2") && !type.equals("STATUS_BADGE") && !type.equals("PAGE_BREAK")) {
+
         p = (cell != null) ? cell.addParagraph() : doc.createParagraph();
         if (isSidebar)
           p.setAlignment(ParagraphAlignment.CENTER);
@@ -106,8 +136,6 @@ public class WordDocumentService {
             h2Row.createCell();
 
           CTTblPr h2TblPr = h2Table.getCTTbl().getTblPr() != null ? h2Table.getCTTbl().getTblPr() : h2Table.getCTTbl().addNewTblPr();
-
-          // ULTIMATE HEADING2 FIX: Switch to fixed DXA width (5000 Twips) so Word cannot shrink it
           h2TblPr.addNewTblW().setType(STTblWidth.DXA);
           h2TblPr.getTblW().setW(BigInteger.valueOf(5000));
 
@@ -121,8 +149,6 @@ public class WordDocumentService {
           h2Cell.setColor("00395D");
 
           CTTcPr h2TcPr = h2Cell.getCTTc().isSetTcPr() ? h2Cell.getCTTc().getTcPr() : h2Cell.getCTTc().addNewTcPr();
-
-          // Force the Cell to also be 5000 Twips to enforce the boundary
           CTTblWidth h2TcW = h2TcPr.isSetTcW() ? h2TcPr.getTcW() : h2TcPr.addNewTcW();
           h2TcW.setType(STTblWidth.DXA);
           h2TcW.setW(BigInteger.valueOf(5000));
@@ -175,7 +201,7 @@ public class WordDocumentService {
           bTblPr.addNewJc().setVal(STJcTable.RIGHT);
 
           bTblPr.addNewTblW().setType(STTblWidth.DXA);
-          bTblPr.getTblW().setW(BigInteger.valueOf(hasTitle ? 6000 : 4000));
+          bTblPr.getTblW().setW(BigInteger.valueOf(hasTitle ? 5000 : 3500));
 
           CTTblBorders bBorders = bTblPr.isSetTblBorders() ? bTblPr.getTblBorders() : bTblPr.addNewTblBorders();
           bBorders.addNewBottom().setVal(STBorder.NONE);
@@ -191,7 +217,7 @@ public class WordDocumentService {
             XWPFTableCell lblCell = bRow.getCell(currentCellIdx++);
             CTTcPr lblTcPr = lblCell.getCTTc().isSetTcPr() ? lblCell.getCTTc().getTcPr() : lblCell.getCTTc().addNewTcPr();
             CTTblWidth lblTcW = lblTcPr.isSetTcW() ? lblTcPr.getTcW() : lblTcPr.addNewTcW();
-            lblTcW.setW(BigInteger.valueOf(4000));
+            lblTcW.setW(BigInteger.valueOf(1500));
 
             if (!lblTcPr.isSetNoWrap())
               lblTcPr.addNewNoWrap();
@@ -211,9 +237,17 @@ public class WordDocumentService {
           XWPFTableCell valCell = bRow.getCell(currentCellIdx);
           CTTcPr valTcPr = valCell.getCTTc().isSetTcPr() ? valCell.getCTTc().getTcPr() : valCell.getCTTc().addNewTcPr();
           CTTblWidth valTcW = valTcPr.isSetTcW() ? valTcPr.getTcW() : valTcPr.addNewTcW();
-          valTcW.setW(BigInteger.valueOf(4000));
+          valTcW.setW(BigInteger.valueOf(3500));
 
-          valTcPr.addNewNoWrap();
+          // Make the badge the exact same height/margins as HEADING2
+          CTTcMar badgeMar = valTcPr.isSetTcMar() ? valTcPr.getTcMar() : valTcPr.addNewTcMar();
+          badgeMar.addNewTop().setW(BigInteger.valueOf(100));
+          badgeMar.addNewBottom().setW(BigInteger.valueOf(100));
+          badgeMar.addNewLeft().setW(BigInteger.valueOf(150));
+          badgeMar.addNewRight().setW(BigInteger.valueOf(150));
+
+          if (!valTcPr.isSetNoWrap())
+            valTcPr.addNewNoWrap();
 
           String hexColor = (section.getAccentColor() != null) ? section.getAccentColor().replace("#", "") : "00395D";
           valCell.setColor(hexColor);
@@ -241,25 +275,96 @@ public class WordDocumentService {
           }
           break;
 
-        case "POSITION_TABLE":
-          if (section.getTableConfig() != null) {
-            tableGenerator.createStyledTable(doc, cell, section.getTableConfig());
-            if (cell != null) {
-              XWPFParagraph sep = cell.addParagraph();
-              sep.setSpacingAfter(0);
-              sep.setSpacingBefore(0);
-            }
-          }
-          break;
-
         case "RICH_TEXT":
-          htmlRenderer.render(doc, cell, section.getText());
+          if (cell != null) {
+            htmlRenderer.render(doc, cell, section.getText());
+          } else {
+            XWPFTable rtTable = doc.createTable(1, 1);
+            CTTblPr rtTblPr = rtTable.getCTTbl().getTblPr() != null ? rtTable.getCTTbl().getTblPr() : rtTable.getCTTbl().addNewTblPr();
+
+            CTTblBorders rtBorders = rtTblPr.isSetTblBorders() ? rtTblPr.getTblBorders() : rtTblPr.addNewTblBorders();
+            rtBorders.addNewBottom().setVal(STBorder.NONE);
+            rtBorders.addNewLeft().setVal(STBorder.NONE);
+            rtBorders.addNewRight().setVal(STBorder.NONE);
+            rtBorders.addNewTop().setVal(STBorder.NONE);
+            rtBorders.addNewInsideH().setVal(STBorder.NONE);
+            rtBorders.addNewInsideV().setVal(STBorder.NONE);
+
+            CTTblWidth rtTblW = rtTblPr.addNewTblW();
+            rtTblW.setType(STTblWidth.DXA);
+            rtTblW.setW(BigInteger.valueOf(availableWidthTwips));
+
+            XWPFTableCell rtCell = rtTable.getRow(0).getCell(0);
+
+            CTTcPr rtTcPr = rtCell.getCTTc().isSetTcPr() ? rtCell.getCTTc().getTcPr() : rtCell.getCTTc().addNewTcPr();
+            CTTcMar rtMar = rtTcPr.isSetTcMar() ? rtTcPr.getTcMar() : rtTcPr.addNewTcMar();
+            rtMar.addNewTop().setW(BigInteger.valueOf(0));
+            rtMar.addNewBottom().setW(BigInteger.valueOf(0));
+            rtMar.addNewLeft().setW(BigInteger.valueOf(0));
+            rtMar.addNewRight().setW(BigInteger.valueOf(0));
+
+            if (!rtCell.getParagraphs().isEmpty()) {
+              rtCell.removeParagraph(0);
+            }
+
+            htmlRenderer.render(doc, rtCell, section.getText());
+            doc.createParagraph();
+          }
           break;
 
         case "TEXT":
         case "PARAGRAPH":
-          XWPFRun rPara = p.createRun();
-          rPara.setText(section.getText());
+          String content = section.getText();
+
+          // FIX: Strict HTML detection to prevent <insert> placeholders from triggering the HTML renderer
+          if (content != null && content.matches("(?i).*<(/?)(b|i|u|ul|ol|li|p|br|strong|em)(\\s+[^>]*)?>.*")) {
+            if (cell != null) {
+              htmlRenderer.render(doc, cell, content);
+            } else {
+              XWPFTable rtTable = doc.createTable(1, 1);
+              CTTblPr rtTblPr = rtTable.getCTTbl().getTblPr() != null ? rtTable.getCTTbl().getTblPr() : rtTable.getCTTbl().addNewTblPr();
+
+              CTTblBorders rtBorders = rtTblPr.isSetTblBorders() ? rtTblPr.getTblBorders() : rtTblPr.addNewTblBorders();
+              rtBorders.addNewBottom().setVal(STBorder.NONE);
+              rtBorders.addNewLeft().setVal(STBorder.NONE);
+              rtBorders.addNewRight().setVal(STBorder.NONE);
+              rtBorders.addNewTop().setVal(STBorder.NONE);
+              rtBorders.addNewInsideH().setVal(STBorder.NONE);
+              rtBorders.addNewInsideV().setVal(STBorder.NONE);
+
+              CTTblWidth rtTblW = rtTblPr.addNewTblW();
+              rtTblW.setType(STTblWidth.DXA);
+              rtTblW.setW(BigInteger.valueOf(availableWidthTwips));
+
+              XWPFTableCell rtCell = rtTable.getRow(0).getCell(0);
+
+              CTTcPr rtTcPr = rtCell.getCTTc().isSetTcPr() ? rtCell.getCTTc().getTcPr() : rtCell.getCTTc().addNewTcPr();
+              CTTcMar rtMar = rtTcPr.isSetTcMar() ? rtTcPr.getTcMar() : rtTcPr.addNewTcMar();
+              rtMar.addNewTop().setW(BigInteger.valueOf(0));
+              rtMar.addNewBottom().setW(BigInteger.valueOf(0));
+              rtMar.addNewLeft().setW(BigInteger.valueOf(0));
+              rtMar.addNewRight().setW(BigInteger.valueOf(0));
+
+              if (!rtCell.getParagraphs().isEmpty()) {
+                rtCell.removeParagraph(0);
+              }
+
+              htmlRenderer.render(doc, rtCell, content);
+              doc.createParagraph();
+            }
+
+            // Clean up the empty default paragraph we created for TEXT
+            if (cell == null && p != null) {
+              int pos = doc.getPosOfParagraph(p);
+              if (pos >= 0) {
+                doc.removeBodyElement(pos);
+              }
+            }
+          } else {
+            // Standard plain text fallback
+            XWPFRun rPara = p.createRun();
+            rPara.setText(content);
+          }
           break;
 
         case "SIDEBAR_LAYOUT":
@@ -269,8 +374,15 @@ public class WordDocumentService {
           break;
 
         case "PAGE_BREAK":
-          if (cell == null && p != null)
-            p.setPageBreak(true);
+          // Attach page break cleanly to prevent blank pages
+          if (cell == null) {
+            int lastIdx = doc.getBodyElements().size() - 1;
+            if (lastIdx >= 0 && doc.getBodyElements().get(lastIdx).getElementType() == BodyElementType.PARAGRAPH) {
+              ((XWPFParagraph) doc.getBodyElements().get(lastIdx)).setPageBreak(true);
+            } else {
+              doc.createParagraph().setPageBreak(true);
+            }
+          }
           break;
 
         case "CHART":
@@ -299,19 +411,24 @@ public class WordDocumentService {
   }
 
   private void cleanCellParagraphs(XWPFTableCell cell) {
-    if (cell.getParagraphs().size() > 1) {
-      XWPFParagraph first = cell.getParagraphs().get(0);
-      if (first.getText().trim().isEmpty() && first.getRuns().isEmpty()) {
-        cell.removeParagraph(0);
+    for (XWPFParagraph p : cell.getParagraphs()) {
+      if (p.getText().trim().isEmpty() && p.getRuns().isEmpty()) {
+        p.setSpacingAfter(0);
+        p.setSpacingBefore(0);
+        CTPPr ppr = p.getCTP().isSetPPr() ? p.getCTP().getPPr() : p.getCTP().addNewPPr();
+        CTSpacing spacing = ppr.isSetSpacing() ? ppr.getSpacing() : ppr.addNewSpacing();
+        spacing.setLineRule(STLineSpacingRule.EXACT);
+        spacing.setLine(BigInteger.valueOf(20));
       }
     }
+
     if (cell.getParagraphs().isEmpty() ||
       cell.getBodyElements().get(cell.getBodyElements().size() - 1).getElementType() != BodyElementType.PARAGRAPH) {
       cell.addParagraph();
     }
   }
 
-  private void applyHeaderFooter(XWPFDocument doc, String headerText, String headerColor, String footerText) {
+  private void applyHeaderFooter(XWPFDocument doc, ReportSettings settings, String headerColor, String footerText) {
     try {
       CTSectPr sectPr = doc.getDocument().getBody().isSetSectPr() ? doc.getDocument().getBody().getSectPr()
         : doc.getDocument().getBody().addNewSectPr();
@@ -320,7 +437,7 @@ public class WordDocumentService {
       if (policy.getDefaultHeader() == null)
         policy.createHeader(XWPFHeaderFooterPolicy.DEFAULT);
 
-      if (headerText != null && !headerText.isEmpty()) {
+      if (settings.getHeaderText() != null && !settings.getHeaderText().isEmpty()) {
         for (XWPFHeader h : doc.getHeaderList()) {
           XWPFParagraph p;
           if (h.getParagraphs().isEmpty()) {
@@ -334,11 +451,22 @@ public class WordDocumentService {
           p.setAlignment(ParagraphAlignment.LEFT);
           p.setSpacingBefore(0);
           p.setSpacingAfter(0);
-          XWPFRun r = p.createRun();
-          r.setText(headerText);
-          r.setBold(true);
-          r.setFontSize(16);
-          r.setColor(headerColor != null ? headerColor : "00395D");
+          XWPFRun r1 = p.createRun();
+          r1.setText(settings.getHeaderText());
+          r1.setBold(true);
+          r1.setFontSize(16);
+          r1.setColor(headerColor != null ? headerColor : "00395D");
+
+          r1.addBreak();
+
+          if (settings.getSubheaderText() != null && !settings.getSubheaderText().isEmpty()) {
+            XWPFRun r2 = p.createRun();
+            r2.setText(settings.getSubheaderText());
+            r2.setBold(false);
+            r2.setFontSize(12);
+            // Subheader text to White
+            r2.setColor("FFFFFF");
+          }
         }
       }
 
@@ -391,7 +519,8 @@ public class WordDocumentService {
     pageMar.setBottom(BigInteger.valueOf(1440));
     pageMar.setLeft(BigInteger.valueOf(1440));
     pageMar.setRight(BigInteger.valueOf(1440));
-    pageMar.setHeader(BigInteger.valueOf(340));
+    // Move Header title up
+    pageMar.setHeader(BigInteger.valueOf(100));
     pageMar.setFooter(BigInteger.valueOf(340));
 
     return (int) (activeWidth - 2880);
@@ -481,10 +610,19 @@ public class WordDocumentService {
 
     try (FileInputStream is = new FileInputStream(chartImage)) {
       XWPFRun r = p.createRun();
-      double maxDisplayWidthEMU = (width * 635.0) * 0.95;
+
       double aspectRatio = (double) config.getHeight() / config.getWidth();
-      int finalWidthEMU = (int) maxDisplayWidthEMU;
-      int finalHeightEMU = (int) (finalWidthEMU * aspectRatio);
+      int finalWidthEMU;
+      int finalHeightEMU;
+
+      if (isSidebar) {
+        finalWidthEMU = org.apache.poi.util.Units.toEMU(115);
+        finalHeightEMU = (int) (finalWidthEMU * aspectRatio);
+      } else {
+        double maxDisplayWidthEMU = (width * 635.0) * 0.95;
+        finalWidthEMU = (int) maxDisplayWidthEMU;
+        finalHeightEMU = (int) (finalWidthEMU * aspectRatio);
+      }
 
       r.addPicture(is, XWPFDocument.PICTURE_TYPE_PNG, chartImage.getName(), finalWidthEMU, finalHeightEMU);
     } finally {
