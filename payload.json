@@ -5,9 +5,11 @@
     "headerText": "BARCLAYS INTERNAL AUDIT (BIA) | FORMAL REPORT TITLE",
     "subheaderText": "Accountable Executive: Mark Hartley",
     "headerColor": "ffffff",
-    "headerRating": "NEEDS IMPROVEMENT",
+    "headerRating": "SATISFACTORY",
     "showRatingInHeader": true,
-    "footerText": "CONFIDENTIAL - Barclays Internal Audit Findings"
+    "footerText": "CONFIDENTIAL - Barclays Internal Audit Findings",
+    "reportDate": "05-Mar-2026",
+    "auditReference": "AUD-2026-9876"
   },
   "sections": [
     {
@@ -17,8 +19,8 @@
         {
           "type": "STATUS_BADGE",
           "title": "Rating:",
-          "text": "NEEDS IMPROVEMENT",
-          "accentColor": "FFC000"
+          "text": "SATISFACTORY",
+          "accentColor": "00B050"
         },
         { "type": "HEADING2", "text": "Control Environment" },
         {
@@ -51,6 +53,7 @@
           "chartConfig": {
             "chartType": "DONUT",
             "title": "Automation of Controls Tested",
+            "centerText": "67%",
             "width": 600,
             "height": 600,
             "multiSeriesData": [

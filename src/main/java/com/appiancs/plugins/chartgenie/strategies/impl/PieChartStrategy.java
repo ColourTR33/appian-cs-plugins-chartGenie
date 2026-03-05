@@ -64,7 +64,7 @@ public class PieChartStrategy implements ChartGeneratorStrategy {
     if (legend != null) {
       legend.setBackgroundPaint(null); // Transparent legend background
       legend.setItemFont(new Font("SansSerif", Font.BOLD, 50));
-      Shape largeLegendBox = new Ellipse2D.Double(-10, -10, 50, 50);
+      Shape largeLegendBox = new Ellipse2D.Double(-15, -15, 30, 30);
       plot.setLegendItemShape(largeLegendBox);
     }
     ;

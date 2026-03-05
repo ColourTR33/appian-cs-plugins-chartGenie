@@ -9,6 +9,8 @@ public class ChartConfiguration {
   private List<String> categories;
   private List<Number> values;
 
+  private String centerText;
+
   // ENTERPRISE FIX: Multi-Series Data (Required for Grouped/Stacked Audit Charts)
   private List<ChartDataPoint> multiSeriesData;
 
@@ -161,5 +163,13 @@ public class ChartConfiguration {
 
   public void setMetrics(String metrics) {
     this.metrics = metrics;
+  }
+
+  public String getCenterText() {
+    return centerText;
+  }
+
+  public void setCenterText(String centerText) {
+    this.centerText = centerText;
   }
 }

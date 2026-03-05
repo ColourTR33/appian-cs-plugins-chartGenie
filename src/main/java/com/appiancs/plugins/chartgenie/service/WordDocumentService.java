@@ -434,8 +434,10 @@ public class WordDocumentService {
         : doc.getDocument().getBody().addNewSectPr();
       XWPFHeaderFooterPolicy policy = new XWPFHeaderFooterPolicy(doc, sectPr);
 
-      if (policy.getDefaultHeader() == null)
+      // --- 1. HEADER LOGIC (Restored to your exact working structure) ---
+      if (policy.getDefaultHeader() == null) {
         policy.createHeader(XWPFHeaderFooterPolicy.DEFAULT);
+      }
 
       if (settings.getHeaderText() != null && !settings.getHeaderText().isEmpty()) {
         for (XWPFHeader h : doc.getHeaderList()) {
@@ -443,6 +445,7 @@ public class WordDocumentService {
           if (h.getParagraphs().isEmpty()) {
             p = h.createParagraph();
           } else {
+            // This cursor insertion preserves your dark blue background structure!
             XmlCursor cursor = h.getParagraphs().get(0).getCTP().newCursor();
             p = h.insertNewParagraph(cursor);
             cursor.dispose();
@@ -451,42 +454,71 @@ public class WordDocumentService {
           p.setAlignment(ParagraphAlignment.LEFT);
           p.setSpacingBefore(0);
           p.setSpacingAfter(0);
+
           XWPFRun r1 = p.createRun();
           r1.setText(settings.getHeaderText());
           r1.setBold(true);
           r1.setFontSize(16);
-          r1.setColor(headerColor != null ? headerColor : "00395D");
-
-          r1.addBreak();
+          r1.setColor(headerColor != null ? headerColor : "FFFFFF");
 
           if (settings.getSubheaderText() != null && !settings.getSubheaderText().isEmpty()) {
+            r1.addBreak();
             XWPFRun r2 = p.createRun();
             r2.setText(settings.getSubheaderText());
             r2.setBold(false);
             r2.setFontSize(12);
-            // Subheader text to White
             r2.setColor("FFFFFF");
           }
         }
       }
 
+      // --- 2. FOOTER LOGIC (Dynamic combination of text, ref, and date) ---
       if (footerText != null && !footerText.isEmpty()) {
-        if (policy.getDefaultFooter() == null)
-          policy.createFooter(XWPFHeaderFooterPolicy.DEFAULT);
+        StringBuilder fullFooterText = new StringBuilder();
+        fullFooterText.append(footerText);
 
-        for (XWPFFooter f : doc.getFooterList()) {
-          XWPFParagraph p = f.getParagraphs().isEmpty() ? f.createParagraph() : f.createParagraph();
+        if (settings.getAuditReference() != null && !settings.getAuditReference().isEmpty()) {
+          if (fullFooterText.length() > 0)
+            fullFooterText.append(" | ");
+          fullFooterText.append("ID: ").append(settings.getAuditReference());
+        }
+
+        if (settings.getReportDate() != null && !settings.getReportDate().isEmpty()) {
+          if (fullFooterText.length() > 0)
+            fullFooterText.append(" | ");
+          fullFooterText.append("Date: ").append(settings.getReportDate());
+        }
+
+        if (fullFooterText.length() > 0) {
+          XWPFFooter footer = policy.getDefaultFooter();
+          if (footer == null) {
+            footer = policy.createFooter(XWPFHeaderFooterPolicy.DEFAULT);
+          }
+
+          XWPFParagraph p;
+          if (footer.getParagraphs().isEmpty()) {
+            p = footer.createParagraph();
+          } else {
+            p = footer.getParagraphs().get(0);
+            // It is safe to clear the footer runs because there is no colored background here
+            for (int i = p.getRuns().size() - 1; i >= 0; i--) {
+              p.removeRun(i);
+            }
+          }
+
           p.setAlignment(ParagraphAlignment.CENTER);
           p.setSpacingBefore(0);
           p.setSpacingAfter(0);
+
           XWPFRun r = p.createRun();
-          r.setText(footerText);
+          r.setText(fullFooterText.toString());
           r.setFontSize(9);
           r.setColor("666666");
         }
       }
     } catch (Exception e) {
       System.err.println("Warning: Failed to apply header/footer: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 

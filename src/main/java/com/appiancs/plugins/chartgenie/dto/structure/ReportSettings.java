@@ -7,6 +7,8 @@ public class ReportSettings {
   private String headerColor;
   private String orientation; // PORTRAIT or LANDSCAPE
   private String pageSize; // A4 or LETTER
+  private String reportDate;
+  private String auditReference;
 
   // NEW FIELDS FOR THE RATING
   private String headerRating;
@@ -94,5 +96,21 @@ public class ReportSettings {
 
   public void setQrUrl(String qrUrl) {
     this.qrUrl = qrUrl;
+  }
+
+  public String getReportDate() {
+    return reportDate;
+  }
+
+  public void setReportDate(String reportDate) {
+    this.reportDate = reportDate;
+  }
+
+  public String getAuditReference() {
+    return auditReference;
+  }
+
+  public void setAuditReference(String auditReference) {
+    this.auditReference = auditReference;
   }
 }
