@@ -1,8 +1,8 @@
-<appian-plugin key="com.appiancs.plugins.chartgenie" name="ChartGenie Services" version="1.0.0">
+<appian-plugin key="com.appiancs.plugins.chartgenie" name="ChartGenie Services">
   <plugin-info>
     <description>A suite of services for generating charts and embedding them into Microsoft Word documents.</description>
     <vendor name="Appian Customer Success" url="https://community.appian.com" />
-    <version>1.3.1</version>
+    <version>1.4.0</version>
     <application-version min="25.2" />
     <osgi-compliant>true</osgi-compliant>
   </plugin-info>

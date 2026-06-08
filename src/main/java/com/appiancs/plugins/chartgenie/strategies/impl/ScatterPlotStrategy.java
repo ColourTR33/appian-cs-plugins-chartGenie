@@ -22,18 +22,10 @@ import org.jfree.data.xy.DefaultXYDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
+import com.appiancs.plugins.chartgenie.service.MonochromaticPaletteGenerator;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class ScatterPlotStrategy implements ChartGeneratorStrategy {
-
-  private static final Paint[] BIA_PALETTE = {
-    Color.decode("#00395D"), // Barclays Dark Blue
-    Color.decode("#00AEEF"), // Barclays Light Blue
-    Color.decode("#FF0000"), // Red
-    Color.decode("#FFC000"), // Amber
-    Color.decode("#00B050"), // Green
-    Color.decode("#00B0F0") // Cyan
-  };
 
   @Override
   public JFreeChart generate(ChartConfiguration config) {
@@ -86,9 +78,11 @@ public class ScatterPlotStrategy implements ChartGeneratorStrategy {
       new Polygon(new int[] { -8, -4, 4, 8, 4, -4 }, new int[] { 0, -6, -6, 0, 6, 6 }, 6) // Hexagon
     };
 
+    Paint[] palette = MonochromaticPaletteGenerator.resolve(config.getPrimaryColor());
+
     // Apply color palette and custom shapes
     plot.setDrawingSupplier(new DefaultDrawingSupplier(
-      BIA_PALETTE,
+      palette,
       DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_STROKE_SEQUENCE,

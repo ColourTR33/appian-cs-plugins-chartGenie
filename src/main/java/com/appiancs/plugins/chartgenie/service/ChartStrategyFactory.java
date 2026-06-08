@@ -35,10 +35,10 @@ public class ChartStrategyFactory {
   private static final String TYPE_SCATTER = "SCATTER";
 
   /**
-   * Private constructor to hide the implicit public one.
+   * Public no-arg constructor allowing instantiation for dependency injection.
    */
-  private ChartStrategyFactory() {
-    throw new IllegalStateException("Utility class");
+  public ChartStrategyFactory() {
+    // intentionally empty
   }
 
   /**
@@ -48,7 +48,7 @@ public class ChartStrategyFactory {
    *          The name of the chart (e.g., "PIE", "BAR").
    * @return A concrete ChartGeneratorStrategy. Defaults to BAR if unknown.
    */
-  public static ChartGeneratorStrategy getStrategy(String chartType) {
+  public ChartGeneratorStrategy getStrategy(String chartType) {
     if (chartType == null) {
       LOG.warn("Chart type is null. Defaulting to BAR chart.");
       return new BarChartStrategy();

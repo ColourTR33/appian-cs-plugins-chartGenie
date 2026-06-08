@@ -1,6 +1,6 @@
 # ChartGenie for Appian
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![Appian](https://img.shields.io/badge/Appian-23.x%2B-orange.svg)
+![Version](https://img.shields.io/badge/version-1.4.0-blue.svg) ![Appian](https://img.shields.io/badge/Appian-25.2%2B-orange.svg)
 
 **ChartGenie** is a high-performance document generation plugin for Appian. It allows developers to generate Microsoft Word (.docx) reports containing dynamically rendered, professional-grade charts based on simple JSON payloads.
 
@@ -131,9 +131,44 @@ The `Generate Chart Report` service expects a JSON structure with two main block
 
 ---
 
+## 🏗 Architecture (v1.4.0 Refactoring)
+
+Version 1.4.0 introduces significant internal refactoring for maintainability, testability, and clean separation of concerns.
+
+### Monochromatic Palette Generation
+Hard-coded client-specific colour palettes have been replaced with a dynamic `MonochromaticPaletteGenerator`. Given any hex colour, it generates a monochromatic palette by distributing lightness evenly across HSL space. Invalid or missing colours fall back to a default grayscale palette. Colour cycling (`palette[index % palette.length]`) handles datasets with more series than palette entries.
+
+### Section Handler Decomposition
+`WordDocumentService` has been decomposed from a monolithic class into a handler-based architecture:
+- A `SectionHandler` interface defines the contract for rendering individual section types.
+- Dedicated handler classes (`HeadingSectionHandler`, `TableSectionHandler`, `ChartSectionHandler`, `SidebarLayoutSectionHandler`, etc.) encapsulate the rendering logic for each section type.
+- A handler registry dispatches section processing, with a `DefaultSectionHandler` for unrecognized types.
+- `WordDocumentService` now orchestrates rather than implements rendering directly.
+
+### Constructor-Based Dependency Injection
+Services now accept their dependencies via parameterized constructors:
+- `WordDocumentService` accepts `HtmlRichTextRenderer`, `TableGenerator`, and `TemplateVariableSubstitutor`.
+- `ChartGenerationService` accepts a `ChartStrategyFactory` instance.
+- No-arg constructors delegate with production defaults, preserving backward compatibility with Appian Smart Service entry points.
+- All constructor parameters are validated with null checks.
+
+### JUnit 5 Test Conversions
+All legacy manual test runners (`LocalRunner`, `BiaLocalRunner`, `AllComponentsLocalRunner`, etc.) have been converted to proper JUnit 5 tests:
+- `public static void main` methods replaced with `@Test` annotations.
+- `Assumptions.assumeTrue` guards tests that depend on local template files.
+- Proper assertions validate outputs.
+- JavaExec Gradle task registrations removed in favour of standard `./gradlew test`.
+
+### Testing Infrastructure
+- **JUnit 5** for unit and integration tests.
+- **jqwik** for property-based testing of palette generation, section dispatch, and DI contracts.
+- **Mockito** for dependency injection verification.
+
+---
+
 ## 📦 Installation
 
-1.  Download the `chartGenie-1.0.0.jar`.
+1.  Download the `chartGenie-1.4.0.jar`.
 2.  Log in to the **Appian Admin Console**.
 3.  Navigate to **Plug-ins** > **Add Plug-in**.
 4.  Upload the JAR file.
@@ -143,7 +178,7 @@ The `Generate Chart Report` service expects a JSON structure with two main block
 
 ## ⚠️ Requirements & Limits
 
-* **Appian Version:** 23.x or higher.
+* **Appian Version:** 25.2 or higher.
 * **Java Version:** 11 or 17 (Standard for modern Appian).
 * **Safety Caps:** Charts are limited to a maximum resolution of 2000x2000px to prevent server memory exhaustion.
 * **Fonts:** The plugin will attempt to use the requested font; if not installed on the server, it falls back to standard SansSerif.

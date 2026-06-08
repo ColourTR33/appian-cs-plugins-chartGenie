@@ -28,6 +28,29 @@ public class ChartGenerationService {
   private static final int MIN_DIMENSION = 100;
   private static final int MAX_DIMENSION = 2000;
 
+  private final ChartStrategyFactory chartStrategyFactory;
+
+  /**
+   * No-arg constructor for production use — delegates to parameterized constructor
+   * with a default ChartStrategyFactory instance.
+   */
+  public ChartGenerationService() {
+    this(new ChartStrategyFactory());
+  }
+
+  /**
+   * Parameterized constructor for dependency injection and testing.
+   *
+   * @param chartStrategyFactory the factory used to resolve chart strategies
+   * @throws IllegalArgumentException if chartStrategyFactory is null
+   */
+  public ChartGenerationService(ChartStrategyFactory chartStrategyFactory) {
+    if (chartStrategyFactory == null) {
+      throw new IllegalArgumentException("chartStrategyFactory must not be null");
+    }
+    this.chartStrategyFactory = chartStrategyFactory;
+  }
+
   public byte[] generateChartImage(ChartConfiguration config) throws IOException {
     if (config == null) {
       throw new IllegalArgumentException("Chart configuration cannot be null.");
@@ -42,7 +65,7 @@ public class ChartGenerationService {
     int finalWidth = Math.min(Math.max(reqWidth, MIN_DIMENSION), MAX_DIMENSION);
     int finalHeight = Math.min(Math.max(reqHeight, MIN_DIMENSION), MAX_DIMENSION);
 
-    ChartGeneratorStrategy strategy = ChartStrategyFactory.getStrategy(config.getChartType());
+    ChartGeneratorStrategy strategy = this.chartStrategyFactory.getStrategy(config.getChartType());
     JFreeChart chart = strategy.generate(config);
 
     if (chart == null) {

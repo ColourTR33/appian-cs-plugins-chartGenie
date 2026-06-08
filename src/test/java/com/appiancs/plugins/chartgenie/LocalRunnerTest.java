@@ -17,23 +17,22 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 /**
- * JUnit 5 test replacing the manual SecurityRegressionTest runner.
- * Validates that a security-sensitive payload can be processed
- * without errors and produces a valid report.
+ * JUnit 5 test replacing the manual LocalRunner.
+ * Generates a report from a template and JSON payload,
+ * verifying that the output is produced successfully.
  */
-class SecurityRegressionTest {
+class LocalRunnerTest {
 
-  private static final Path TEST_DIR =
-      Paths.get("src/test/java/com/appiancs/plugins/chartgenie");
+  private static final Path TEST_DIR = Paths.get("src/test/java/com/appiancs/plugins/chartgenie");
   private static final Path TEMPLATE_PATH = TEST_DIR.resolve("template.docx");
-  private static final Path PAYLOAD_PATH = TEST_DIR.resolve("security-test-payload.json");
+  private static final Path PAYLOAD_PATH = TEST_DIR.resolve("payload.json");
 
   @Test
-  void generateReport_withSecurityPayload() throws Exception {
+  void generateReport_fromTemplateAndPayload() throws Exception {
     Assumptions.assumeTrue(Files.exists(TEMPLATE_PATH),
-        "Template not available in CI environment");
+        "Template file not available in CI environment");
     Assumptions.assumeTrue(Files.exists(PAYLOAD_PATH),
-        "Security test payload not available in CI environment");
+        "Payload file not available in CI environment");
 
     // WordDocumentService requires Appian runtime classes that may not be
     // available outside the plugin container (stub JAR lacks method bodies).
@@ -50,26 +49,20 @@ class SecurityRegressionTest {
     Gson gson = new Gson();
     Type type = new TypeToken<ReportRequest>() {}.getType();
     ReportRequest req = gson.fromJson(json, type);
-    assertNotNull(req, "ReportRequest should parse successfully from security payload");
-    assertNotNull(req.getSections(), "ReportRequest should contain sections");
+    assertNotNull(req, "Parsed ReportRequest should not be null");
+    assertNotNull(req.getSections(), "ReportRequest sections should not be null");
 
-    byte[] result;
-    try {
-      result = service.generateReport(
-          TEMPLATE_PATH.toFile(), req.getSettings(), req.getSections());
-    } catch (NoClassDefFoundError | ClassFormatError e) {
-      Assumptions.abort("Appian runtime classes not available: " + e.getMessage());
-      return;
-    }
+    byte[] result = service.generateReport(
+        TEMPLATE_PATH.toFile(), req.getSettings(), req.getSections());
 
-    assertNotNull(result, "Generated report should not be null");
+    assertNotNull(result, "Generated report byte array should not be null");
     assertTrue(result.length > 0, "Generated report should not be empty");
   }
 
   @Test
-  void parseSecurityPayload_successfully() throws Exception {
+  void parsePayload_successfully() throws Exception {
     Assumptions.assumeTrue(Files.exists(PAYLOAD_PATH),
-        "Security test payload not available in CI environment");
+        "Payload file not available in CI environment");
 
     String json = new String(Files.readAllBytes(PAYLOAD_PATH), "UTF-8");
 
@@ -77,9 +70,9 @@ class SecurityRegressionTest {
     Type type = new TypeToken<ReportRequest>() {}.getType();
     ReportRequest req = gson.fromJson(json, type);
 
-    assertNotNull(req, "ReportRequest should be parsed from security payload");
+    assertNotNull(req, "ReportRequest should be parsed from payload.json");
     assertNotNull(req.getSettings(), "ReportSettings should not be null");
     assertNotNull(req.getSections(), "ReportSections should not be null");
-    assertTrue(!req.getSections().isEmpty(), "ReportRequest should contain at least one section");
+    assertTrue(req.getSections().size() > 0, "ReportRequest should contain at least one section");
   }
 }

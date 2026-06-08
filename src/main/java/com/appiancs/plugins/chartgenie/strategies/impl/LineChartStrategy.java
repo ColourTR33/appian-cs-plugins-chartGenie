@@ -11,16 +11,10 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
+import com.appiancs.plugins.chartgenie.service.MonochromaticPaletteGenerator;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class LineChartStrategy implements ChartGeneratorStrategy {
-
-  private static final Paint[] BIA_PALETTE = {
-    Color.decode("#00395D"), // Barclays Dark Blue (Primary Line)
-    Color.decode("#00AEEF"), // Barclays Light Blue (Secondary Line)
-    Color.decode("#FF0000"), // Unsatisfactory (Red)
-    Color.decode("#FFC000") // Needs Improvement (Amber)
-  };
 
   @Override
   public JFreeChart generate(ChartConfiguration config) {
@@ -43,9 +37,9 @@ public class LineChartStrategy implements ChartGeneratorStrategy {
 
     CategoryPlot plot = chart.getCategoryPlot();
 
-    // Apply Barclays Colors
+    Paint[] palette = MonochromaticPaletteGenerator.resolve(config.getPrimaryColor());
     plot.setDrawingSupplier(new DefaultDrawingSupplier(
-      BIA_PALETTE,
+      palette,
       DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_STROKE_SEQUENCE,

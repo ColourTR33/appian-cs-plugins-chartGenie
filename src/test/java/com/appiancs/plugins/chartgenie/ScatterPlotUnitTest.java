@@ -1,8 +1,12 @@
 package com.appiancs.plugins.chartgenie;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Arrays;
 
 import org.jfree.chart.JFreeChart;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,64 +15,53 @@ import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
 import com.appiancs.plugins.chartgenie.service.ChartStrategyFactory;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
-public class ScatterPlotUnitTest {
+class ScatterPlotUnitTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(ScatterPlotUnitTest.class);
 
-  private static String sanitizeForLogging(String input) {
-    if (input == null)
-      return "null";
-    String value = input.length() > 200 ? input.substring(0, 200) + "[TRUNCATED]" : input;
-    return value.replaceAll("[\\r\\n\\t]", "_").replaceAll("[\\p{Cntrl}]", "").trim();
-  }
+  @Test
+  void testScatterPlotGeneration() {
+    // Create test configuration
+    ChartConfiguration config = new ChartConfiguration();
+    config.setChartType("SCATTER");
+    config.setTitle("Test Scatter Plot");
 
-  public static void main(String[] args) {
-    try {
-      LOG.info("--- Testing Scatter Plot Strategy ---");
+    // Create test data points
+    ChartDataPoint point1 = new ChartDataPoint();
+    point1.setSeries("Series A");
+    point1.setCategory("1");
+    point1.setValue(10);
 
-      // Create test configuration
-      ChartConfiguration config = new ChartConfiguration();
-      config.setChartType("SCATTER");
-      config.setTitle("Test Scatter Plot");
+    ChartDataPoint point2 = new ChartDataPoint();
+    point2.setSeries("Series A");
+    point2.setCategory("2");
+    point2.setValue(20);
 
-      // Create test data points
-      ChartDataPoint point1 = new ChartDataPoint();
-      point1.setSeries("Series A");
-      point1.setCategory("1");
-      point1.setValue(10);
+    ChartDataPoint point3 = new ChartDataPoint();
+    point3.setSeries("Series B");
+    point3.setCategory("1");
+    point3.setValue(15);
 
-      ChartDataPoint point2 = new ChartDataPoint();
-      point2.setSeries("Series A");
-      point2.setCategory("2");
-      point2.setValue(20);
+    ChartDataPoint point4 = new ChartDataPoint();
+    point4.setSeries("Series B");
+    point4.setCategory("2");
+    point4.setValue(25);
 
-      ChartDataPoint point3 = new ChartDataPoint();
-      point3.setSeries("Series B");
-      point3.setCategory("1");
-      point3.setValue(15);
+    config.setMultiSeriesData(Arrays.asList(point1, point2, point3, point4));
 
-      ChartDataPoint point4 = new ChartDataPoint();
-      point4.setSeries("Series B");
-      point4.setCategory("2");
-      point4.setValue(25);
+    // Test strategy factory returns a valid strategy
+    ChartGeneratorStrategy strategy = new ChartStrategyFactory().getStrategy("SCATTER");
+    assertNotNull(strategy, "Scatter plot strategy should not be null");
+    LOG.info("Strategy class: {}", strategy.getClass().getSimpleName());
 
-      config.setMultiSeriesData(Arrays.asList(point1, point2, point3, point4));
+    // Generate chart and verify
+    JFreeChart chart = strategy.generate(config);
+    assertNotNull(chart, "Generated scatter plot chart should not be null");
+    assertNotNull(chart.getTitle(), "Chart should have a title");
+    assertTrue(chart.getXYPlot().getDataset().getSeriesCount() > 0,
+        "Chart dataset should contain at least one series");
 
-      // Test strategy factory
-      ChartGeneratorStrategy strategy = ChartStrategyFactory.getStrategy("SCATTER");
-      LOG.info("Strategy class: {}", sanitizeForLogging(strategy.getClass().getSimpleName()));
-
-      // Generate chart
-      JFreeChart chart = strategy.generate(config);
-      LOG.info("Chart generated successfully!");
-      String chartTitle = chart.getTitle() != null ? chart.getTitle().getText() : "No title";
-      LOG.info("Chart title: {}", sanitizeForLogging(chartTitle));
-      LOG.info("Dataset series count: {}", chart.getXYPlot().getDataset().getSeriesCount());
-
-      LOG.info("--- Scatter Plot Strategy Test Completed Successfully ---");
-
-    } catch (Exception e) {
-      LOG.error("Error during scatter plot strategy test", e);
-    }
+    LOG.info("Scatter plot generated successfully with {} series",
+        chart.getXYPlot().getDataset().getSeriesCount());
   }
 }

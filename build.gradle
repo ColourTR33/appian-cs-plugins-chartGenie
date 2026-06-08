@@ -75,6 +75,8 @@ dependencies {
   // Test
   testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+  testImplementation 'net.jqwik:jqwik:1.9.1'
+  testImplementation 'org.mockito:mockito-core:5.14.2'
 
   // Security scanning
   spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0'
@@ -224,33 +226,6 @@ spotless {
     trimTrailingWhitespace()
     indentWithSpaces(2)
     endWithNewline()
-  }
-}
-
-// ─── Local Runner Tasks ───────────────────────────────────────────────────────
-// All runner tasks share the same classpath and working directory.
-// Add new runners by extending the map — no copy-paste required.
-def runnerBaseDir = file('src/test/java/com/appiancs/plugins/chartgenie')
-def pkg = 'com.appiancs.plugins.chartgenie'
-
-[
-  runLocalTest             : "${pkg}.LocalRunner",
-  runJsonTest              : "${pkg}.JsonRunner",
-  runScatterTest           : "${pkg}.ScatterPlotTestRunner",
-  runScatterUnitTest       : "${pkg}.ScatterPlotUnitTest",
-  runSecurityRegressionTest: "${pkg}.SecurityRegressionTest",
-  runHtmlMarkupTest        : "${pkg}.HtmlMarkupLocalRunner",
-  runAllComponentsTest     : "${pkg}.AllComponentsLocalRunner",
-  runNestedTablesTest      : "${pkg}.NestedTablesLocalRunner",
-  runBiaLocalTest          : "${pkg}.BiaLocalRunner",
-  runAllChartTypesTest     : "${pkg}.AllChartTypesTest",
-].each { taskName, mainClass ->
-  tasks.register(taskName, JavaExec) {
-    group          = 'verification'
-    classpath      = sourceSets.test.runtimeClasspath
-    it.mainClass   = mainClass
-    workingDir     = runnerBaseDir
-    standardOutput = System.out
   }
 }
 

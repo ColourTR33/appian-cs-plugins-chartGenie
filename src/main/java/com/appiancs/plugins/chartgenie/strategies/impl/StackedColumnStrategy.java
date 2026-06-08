@@ -2,6 +2,7 @@ package com.appiancs.plugins.chartgenie.strategies.impl;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Paint;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -15,11 +16,11 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
+import com.appiancs.plugins.chartgenie.service.MonochromaticPaletteGenerator;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class StackedColumnStrategy implements ChartGeneratorStrategy {
 
-  private static final Color COLOR_PRIMARY_DEFAULT = new Color(30, 60, 150);
   private static final Color COLOR_GRIDLINES = new Color(220, 220, 220);
   private static final String DEFAULT_FONT = "SansSerif";
 
@@ -72,7 +73,11 @@ public class StackedColumnStrategy implements ChartGeneratorStrategy {
     renderer.setBarPainter(new StandardBarPainter());
     renderer.setShadowVisible(false);
     renderer.setDrawBarOutline(false);
-    renderer.setSeriesPaint(0, ChartStyleUtils.decodeColor(config.getPrimaryColor(), COLOR_PRIMARY_DEFAULT));
+
+    Paint[] palette = MonochromaticPaletteGenerator.resolve(config.getPrimaryColor());
+    for (int i = 0; i < dataset.getRowCount(); i++) {
+      renderer.setSeriesPaint(i, palette[i % palette.length]);
+    }
 
     ChartStyleUtils.applyLegendPosition(chart, config.getLegendPosition(), currentBgColor,
       new Font(fontName, Font.PLAIN, fontSize));

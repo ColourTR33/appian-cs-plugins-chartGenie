@@ -2,6 +2,7 @@ package com.appiancs.plugins.chartgenie.strategies.impl;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Paint;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -14,12 +15,12 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
+import com.appiancs.plugins.chartgenie.service.MonochromaticPaletteGenerator;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class AreaChartStrategy implements ChartGeneratorStrategy {
 
   private static final Color COLOR_GRIDLINES = new Color(220, 220, 220);
-  private static final Color COLOR_PRIMARY_DEFAULT = new Color(0, 184, 212);
   private static final String DEFAULT_FONT = "SansSerif";
   private static final int ALPHA_TRANSPARENCY = 180;
 
@@ -67,11 +68,14 @@ public class AreaChartStrategy implements ChartGeneratorStrategy {
     rangeAxis.setTickLabelFont(new Font(fontName, Font.PLAIN, fontSize));
     rangeAxis.setLabelFont(new Font(fontName, Font.BOLD, fontSize + 2));
 
-    Color primaryColor = ChartStyleUtils.decodeColor(config.getPrimaryColor(), COLOR_PRIMARY_DEFAULT);
-    Color transparentColor = new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), ALPHA_TRANSPARENCY);
+    Paint[] palette = MonochromaticPaletteGenerator.resolve(config.getPrimaryColor());
 
     AreaRenderer renderer = (AreaRenderer) plot.getRenderer();
-    renderer.setSeriesPaint(0, transparentColor);
+    for (int i = 0; i < dataset.getRowCount(); i++) {
+      Color baseColor = (Color) palette[i % palette.length];
+      Color transparentColor = new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), ALPHA_TRANSPARENCY);
+      renderer.setSeriesPaint(i, transparentColor);
+    }
 
     ChartStyleUtils.applyLegendPosition(chart, config.getLegendPosition(), currentBgColor,
       new Font(fontName, Font.PLAIN, fontSize));

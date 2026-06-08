@@ -17,18 +17,10 @@ import org.jfree.data.general.DefaultPieDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
+import com.appiancs.plugins.chartgenie.service.MonochromaticPaletteGenerator;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class DonutChartStrategy implements ChartGeneratorStrategy {
-
-  // Strictly Barclays Blue Hues
-  private static final Paint[] BARCLAYS_BLUES = {
-    Color.decode("#00395D"), // Dark Blue
-    Color.decode("#00AEEF"), // Light Blue
-    Color.decode("#00B0CA"), // Cyan
-    Color.decode("#005A8C"), // Mid Blue
-    Color.decode("#80DFFF") // Pale Blue
-  };
 
   @Override
   public JFreeChart generate(ChartConfiguration config) {
@@ -65,7 +57,8 @@ public class DonutChartStrategy implements ChartGeneratorStrategy {
 
     // Dropped font size to 45 so the bounding box safely fits inside the hole
     plot.setCenterTextFont(new Font("SansSerif", Font.BOLD, 35));
-    plot.setCenterTextColor(Color.decode("#00395D")); // Barclays Blue
+    Color centerColor = ChartStyleUtils.decodeColor(config.getPrimaryColor(), Color.decode("#333333"));
+    plot.setCenterTextColor(centerColor);
 
     // Labels ON the slices (just the percentage)
     StandardPieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator(
@@ -94,8 +87,9 @@ public class DonutChartStrategy implements ChartGeneratorStrategy {
     // 0.50 means the ring takes up exactly half the radius, leaving a 50% hole for the text to comfortably sit inside
     plot.setSectionDepth(0.65);
 
+    Paint[] palette = MonochromaticPaletteGenerator.resolve(config.getPrimaryColor());
     plot.setDrawingSupplier(new DefaultDrawingSupplier(
-      BARCLAYS_BLUES,
+      palette,
       DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_STROKE_SEQUENCE,

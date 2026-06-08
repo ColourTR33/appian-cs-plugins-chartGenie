@@ -17,18 +17,10 @@ import org.jfree.data.general.DefaultPieDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
 import com.appiancs.plugins.chartgenie.dto.ChartDataPoint;
+import com.appiancs.plugins.chartgenie.service.MonochromaticPaletteGenerator;
 import com.appiancs.plugins.chartgenie.strategies.ChartGeneratorStrategy;
 
 public class PieChartStrategy implements ChartGeneratorStrategy {
-
-  // Strictly Barclays Blue Hues
-  private static final Paint[] BARCLAYS_BLUES = {
-    Color.decode("#00395D"), // Dark Blue
-    Color.decode("#00AEEF"), // Light Blue
-    Color.decode("#00B0CA"), // Cyan
-    Color.decode("#005A8C"), // Mid Blue
-    Color.decode("#80DFFF") // Pale Blue
-  };
 
   @Override
   public JFreeChart generate(ChartConfiguration config) {
@@ -57,8 +49,9 @@ public class PieChartStrategy implements ChartGeneratorStrategy {
       plot.setExplodePercent(dataset.getKey(i), 0.03);
     }
 
+    Paint[] palette = MonochromaticPaletteGenerator.resolve(config.getPrimaryColor());
     plot.setDrawingSupplier(new DefaultDrawingSupplier(
-      BARCLAYS_BLUES,
+      palette,
       DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE,
       DefaultDrawingSupplier.DEFAULT_STROKE_SEQUENCE,
