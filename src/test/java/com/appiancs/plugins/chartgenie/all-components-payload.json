@@ -1,0 +1,375 @@
+{
+  "settings": {
+    "orientation": "PORTRAIT",
+    "pageSize": "A4",
+    "headerText": "ChartGenie — Full Component Showcase",
+    "subheaderText": "Every section type · All 8 chart types · All table features · Nested tables · Rich text",
+    "headerColor": "00395D",
+    "headerRating": "Satisfactory",
+    "showRatingInHeader": true,
+    "footerText": "INTERNAL — ChartGenie Component Test v1.0",
+    "reportDate": "05 06 2026",
+    "auditReference": "Full Showcase Test"
+  },
+  "sections": [
+
+    { "type": "HEADING",  "text": "1. Section Types" },
+    { "type": "HEADING2", "text": "1.1 HEADING2 — Coloured Banner" },
+    { "type": "TEXT",     "text": "This is a TEXT section. Plain paragraph body text with no formatting applied." },
+    { "type": "PARAGRAPH","text": "This is a PARAGRAPH section — identical behaviour to TEXT." },
+    { "type": "RICH_TEXT","text": "<p>This is a <strong>RICH_TEXT</strong> section. It supports <em>italic</em>, <u>underline</u>, <strong>bold</strong>, <span style=\"color:#CC0000\">coloured text</span> and bullet lists:</p><ul><li>Bullet item one</li><li>Bullet item two</li><li>Bullet item three</li></ul><p>Tables can also appear inline via REPORT_TABLE sections below.</p>" },
+
+    { "type": "HEADING2", "text": "1.2 STATUS_BADGE — Inline rating widget" },
+    { "type": "STATUS_BADGE", "title": "Control Rating:", "text": "Satisfactory",  "accentColor": "007700" },
+    { "type": "STATUS_BADGE", "title": "Issue Severity:", "text": "Critical",      "accentColor": "CC0000" },
+    { "type": "STATUS_BADGE", "title": "Pipeline:",       "text": "In Progress",   "accentColor": "FF6600" },
+    { "type": "STATUS_BADGE",                             "text": "No Label Badge","accentColor": "1E3C96" },
+
+    { "type": "HEADING2", "text": "1.3 QR_CODE — URL encoded as QR" },
+    { "type": "QR_CODE",  "text": "https://appian.com/suite/sites/chartgenie" },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "2. All 8 Chart Types" },
+
+    { "type": "HEADING2", "text": "2.1 BAR Chart — Multi-series grouped" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "BAR", "title": "Issues by Category", "width": 700, "height": 400,
+        "multiSeriesData": [
+          { "series": "Critical", "category": "Access",   "value": 3 },
+          { "series": "Major",    "category": "Access",   "value": 5 },
+          { "series": "Critical", "category": "Data",     "value": 1 },
+          { "series": "Major",    "category": "Data",     "value": 4 },
+          { "series": "Critical", "category": "Process",  "value": 2 },
+          { "series": "Major",    "category": "Process",  "value": 6 }
+        ]
+    }},
+
+    { "type": "HEADING2", "text": "2.2 COLUMN Chart — Vertical bar" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "COLUMN", "title": "Quarterly Issue Count", "width": 700, "height": 400,
+        "primaryColor": "1E3C96",
+        "baseFontSize": 16,
+        "legendPosition": "BOTTOM",
+        "categories": ["Q1", "Q2", "Q3", "Q4"],
+        "values": [12, 8, 15, 6]
+    }},
+
+    { "type": "HEADING2", "text": "2.3 LINE Chart — Trend over time" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "LINE", "title": "Open Issues Trend", "width": 700, "height": 400,
+        "multiSeriesData": [
+          { "series": "BIA",        "category": "Jan", "value": 20 },
+          { "series": "BIA",        "category": "Feb", "value": 18 },
+          { "series": "BIA",        "category": "Mar", "value": 22 },
+          { "series": "BIA",        "category": "Apr", "value": 15 },
+          { "series": "Regulatory", "category": "Jan", "value": 8  },
+          { "series": "Regulatory", "category": "Feb", "value": 10 },
+          { "series": "Regulatory", "category": "Mar", "value": 9  },
+          { "series": "Regulatory", "category": "Apr", "value": 7  }
+        ]
+    }},
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING2", "text": "2.4 AREA Chart — Volume over time" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "AREA", "title": "Cumulative Risk Exposure", "width": 700, "height": 380,
+        "primaryColor": "00395D",
+        "baseFontSize": 16,
+        "legendPosition": "NONE",
+        "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        "values": [100, 120, 95, 140, 110, 130]
+    }},
+
+    { "type": "HEADING2", "text": "2.5 PIE Chart — Slice distribution with spacers" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "PIE", "title": "Issue Source Distribution", "width": 600, "height": 600,
+        "multiSeriesData": [
+          { "category": "BIA",       "value": 55 },
+          { "category": "1LoD",      "value": 25 },
+          { "category": "Regulatory","value": 15 },
+          { "category": "External",  "value": 5  }
+        ]
+    }},
+
+    { "type": "HEADING2", "text": "2.6 DONUT Chart — Ring with centre text" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "DONUT", "title": "Automation Coverage", "centerText": "67%",
+        "width": 600, "height": 600,
+        "multiSeriesData": [
+          { "category": "Automated", "value": 67 },
+          { "category": "Manual",    "value": 33 }
+        ]
+    }},
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING2", "text": "2.7 STACKED COLUMN Chart — Composition" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "STACKED", "title": "Issues by Severity per Quarter", "width": 700, "height": 400,
+        "primaryColor": "CC0000",
+        "baseFontSize": 16,
+        "legendPosition": "RIGHT",
+        "multiSeriesData": [
+          { "series": "Critical", "category": "Q1", "value": 3 },
+          { "series": "Major",    "category": "Q1", "value": 6 },
+          { "series": "Limited",  "category": "Q1", "value": 4 },
+          { "series": "Critical", "category": "Q2", "value": 1 },
+          { "series": "Major",    "category": "Q2", "value": 5 },
+          { "series": "Limited",  "category": "Q2", "value": 7 },
+          { "series": "Critical", "category": "Q3", "value": 4 },
+          { "series": "Major",    "category": "Q3", "value": 3 },
+          { "series": "Limited",  "category": "Q3", "value": 2 }
+        ]
+    }},
+
+    { "type": "HEADING2", "text": "2.8 SCATTER Plot — Correlation view" },
+    { "type": "CHART", "chartConfig": {
+        "chartType": "SCATTER", "title": "Risk vs. Control Maturity", "width": 700, "height": 400,
+        "multiSeriesData": [
+          { "series": "High Risk",   "category": "2",  "value": 85 },
+          { "series": "High Risk",   "category": "3",  "value": 72 },
+          { "series": "High Risk",   "category": "5",  "value": 60 },
+          { "series": "Medium Risk", "category": "4",  "value": 50 },
+          { "series": "Medium Risk", "category": "6",  "value": 38 },
+          { "series": "Medium Risk", "category": "7",  "value": 30 },
+          { "series": "Low Risk",    "category": "8",  "value": 20 },
+          { "series": "Low Risk",    "category": "10", "value": 10 }
+        ]
+    }},
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "3. Sidebar Layout" },
+    { "type": "TEXT",    "text": "The sidebar layout places main content on the left and a narrower sidebar on the right. Both columns can contain any section type." },
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "leftColumnRatio": 0.68,
+      "mainContent": [
+        { "type": "HEADING",   "text": "Main Content Area" },
+        { "type": "TEXT",      "text": "This is the main (wide) left column. It can contain headings, text blocks, rich text, tables and charts." },
+        { "type": "RICH_TEXT", "text": "<p>Rich text works inside the sidebar layout too: <strong>bold</strong>, <em>italic</em>, <span style=\"color:#1E3C96\">coloured</span>.</p>" },
+        { "type": "HEADING2",  "text": "Inline Sub-heading" },
+        { "type": "TEXT",      "text": "Multiple sections stack vertically within the main column just like the main document body." }
+      ],
+      "sidebarContent": [
+        { "type": "HEADING",  "text": "Sidebar" },
+        { "type": "STATUS_BADGE", "text": "Satisfactory", "accentColor": "007700" },
+        { "type": "TEXT",     "text": "Sidebar supports text, badges and charts." },
+        { "type": "CHART", "chartConfig": {
+            "chartType": "DONUT", "title": "Coverage", "centerText": "80%",
+            "width": 400, "height": 400,
+            "multiSeriesData": [
+              { "category": "Covered",     "value": 80 },
+              { "category": "Not Covered", "value": 20 }
+            ]
+        }}
+      ]
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "4. Table Features" },
+
+    { "type": "HEADING2", "text": "4.1 Full Table — All formatting options" },
+    { "type": "TEXT",      "text": "Header font 14pt · Body font 10pt · Alternating rows · Custom header colours · Per-cell colour overrides · Colspan · Rich text cells" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["#", "Issue Title", "Severity", "Owner", "Due Date"],
+        "columnWidths": [5, 45, 15, 20, 15],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 14,
+        "bodyFontSize": 10,
+        "oddRowColor": "EBF0FA",
+        "bordersEnabled": true,
+        "rows": [
+          [
+            { "text": "1" },
+            { "text": "<b>Privileged Access</b> — No periodic review of admin accounts" },
+            { "text": "Critical",  "textColor": "CC0000", "backgroundColor": "FFE8E8" },
+            { "text": "IAM Team" },
+            { "text": "30/09/2026" }
+          ],
+          [
+            { "text": "2" },
+            { "text": "<b>Audit Logging</b> — SIEM coverage gaps on 3 critical systems" },
+            { "text": "Major",    "textColor": "FF6600", "backgroundColor": "FFF3E0" },
+            { "text": "SecOps" },
+            { "text": "31/10/2026" }
+          ],
+          [
+            { "text": "3" },
+            { "text": "<b>Data Classification</b> — Inconsistent tagging on cloud documents" },
+            { "text": "Major",    "textColor": "FF6600", "backgroundColor": "FFF3E0" },
+            { "text": "Data Office" },
+            { "text": "31/12/2026" }
+          ],
+          [
+            { "text": "4" },
+            { "text": "<b>Password Policy</b> — Minimum length below standard" },
+            { "text": "Limited",  "textColor": "007700", "backgroundColor": "E8F8E8" },
+            { "text": "CISO" },
+            { "text": "28/02/2027" }
+          ],
+          [
+            { "text": "Colspan banner across all columns", "colspan": 5, "backgroundColor": "1E3C96", "textColor": "FFFFFF" }
+          ],
+          [
+            { "text": "5" },
+            { "text": "<em>Informational finding — no action required</em>", "textColor": "666666" },
+            { "text": "Info",     "textColor": "1E3C96" },
+            { "text": "N/A" },
+            { "text": "N/A" }
+          ]
+        ]
+      }
+    },
+
+    { "type": "HEADING2", "text": "4.2 Borderless Table" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Metric", "Value"],
+        "columnWidths": [40, 60],
+        "headerBackgroundColor": "333333",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 12,
+        "bodyFontSize": 11,
+        "bordersEnabled": false,
+        "rows": [
+          [{ "text": "Total Controls Tested" }, { "text": "142" }],
+          [{ "text": "Controls Passed"       }, { "text": "128", "textColor": "007700" }],
+          [{ "text": "Controls Failed"       }, { "text": "14",  "textColor": "CC0000" }],
+          [{ "text": "Automation Rate"       }, { "text": "67%", "textColor": "1E3C96" }]
+        ]
+      }
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING2", "text": "4.3 Nested Tables — 3 Levels Deep" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Area", "Details"],
+        "columnWidths": [25, 75],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 13,
+        "bodyFontSize": 11,
+        "oddRowColor": "F5F5F5",
+        "bordersEnabled": true,
+        "rows": [
+          [
+            { "text": "<b>Level 1 Cell</b>", "backgroundColor": "EBF0FA" },
+            {
+              "text": "",
+              "nestedTable": {
+                "headers": ["Sub-Area", "Rating", "Evidence"],
+                "columnWidths": [35, 20, 45],
+                "headerBackgroundColor": "1E3C96",
+                "headerTextColor": "FFFFFF",
+                "headerFontSize": 11,
+                "bodyFontSize": 10,
+                "oddRowColor": "F0F4FF",
+                "bordersEnabled": true,
+                "rows": [
+                  [
+                    { "text": "<b>Access Controls</b>" },
+                    { "text": "FAIL", "textColor": "CC0000" },
+                    { "text": "No MFA on 12 admin accounts" }
+                  ],
+                  [
+                    { "text": "<b>Monitoring</b>" },
+                    { "text": "PASS", "textColor": "007700" },
+                    { "text": "SIEM fully configured" }
+                  ],
+                  [
+                    { "text": "<b>Level 2 Nested</b>", "colspan": 2, "backgroundColor": "E0E8FF" },
+                    {
+                      "text": "",
+                      "nestedTable": {
+                        "headers": ["Control", "Status"],
+                        "columnWidths": [60, 40],
+                        "headerBackgroundColor": "CC0000",
+                        "headerTextColor": "FFFFFF",
+                        "headerFontSize": 9,
+                        "bodyFontSize": 8,
+                        "bordersEnabled": true,
+                        "rows": [
+                          [{ "text": "<b>MFA Enforced</b>"        }, { "text": "PASS", "textColor": "007700" }],
+                          [{ "text": "<b>Session Timeout 15m</b>" }, { "text": "FAIL", "textColor": "CC0000" }],
+                          [{ "text": "<b>Least Privilege</b>"     }, { "text": "PASS", "textColor": "007700" }]
+                        ]
+                      }
+                    }
+                  ]
+                ]
+              }
+            }
+          ],
+          [
+            { "text": "<b>Plain L1 Row</b>" },
+            { "text": "This row appears after the nested table to confirm sequential rendering is intact." }
+          ]
+        ]
+      }
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "5. Charts in Sidebar (Landscape Feel)" },
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "leftColumnRatio": 0.60,
+      "mainContent": [
+        { "type": "HEADING2", "text": "Bar + Column side by side" },
+        { "type": "CHART", "chartConfig": {
+            "chartType": "BAR", "title": "Issues by Quarter", "width": 600, "height": 350,
+            "multiSeriesData": [
+              { "series": "Open",   "category": "Q1", "value": 8  },
+              { "series": "Closed", "category": "Q1", "value": 12 },
+              { "series": "Open",   "category": "Q2", "value": 5  },
+              { "series": "Closed", "category": "Q2", "value": 10 }
+            ]
+        }},
+        { "type": "CHART", "chartConfig": {
+            "chartType": "LINE", "title": "Remediation Trend", "width": 600, "height": 350,
+            "multiSeriesData": [
+              { "series": "Target", "category": "Jan", "value": 10 },
+              { "series": "Target", "category": "Feb", "value": 8  },
+              { "series": "Target", "category": "Mar", "value": 6  },
+              { "series": "Actual", "category": "Jan", "value": 12 },
+              { "series": "Actual", "category": "Feb", "value": 9  },
+              { "series": "Actual", "category": "Mar", "value": 7  }
+            ]
+        }}
+      ],
+      "sidebarContent": [
+        { "type": "HEADING",  "text": "KPIs" },
+        { "type": "STATUS_BADGE", "title": "Overall:", "text": "PASS",    "accentColor": "007700" },
+        { "type": "STATUS_BADGE", "title": "Trend:",   "text": "Improving","accentColor": "1E3C96" },
+        { "type": "CHART", "chartConfig": {
+            "chartType": "PIE", "title": "Status Split", "width": 400, "height": 400,
+            "multiSeriesData": [
+              { "category": "Pass",        "value": 72 },
+              { "category": "Fail",        "value": 18 },
+              { "category": "In Progress", "value": 10 }
+            ]
+        }}
+      ]
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "6. QR Code" },
+    { "type": "TEXT",    "text": "The QR_CODE section encodes any URL as a scannable code embedded in the document." },
+    { "type": "QR_CODE", "text": "https://community.appian.com/b/appmarket/posts/chartgenie" },
+
+    { "type": "HEADING", "text": "7. Rich Text — Full Tag Coverage" },
+    { "type": "RICH_TEXT", "text": "<p><strong>Bold</strong>, <em>Italic</em>, <u>Underline</u>, <strong><em>Bold-Italic</em></strong>, <strong><u>Bold-Underline</u></strong></p><p><span style=\"color:#CC0000\">Red text</span>, <span style=\"color:#007700\">Green text</span>, <span style=\"color:#1E3C96\">Blue text</span></p><p>Unordered list:</p><ul><li>First item</li><li>Second item with <strong>bold</strong> word</li><li>Third item with <em>italic</em> and <span style=\"color:#CC0000\">colour</span></li></ul><p>Ordered list (using HTML li inside ul):</p><ul><li>Step one — <strong>initialise</strong> the process</li><li>Step two — <u>validate</u> the inputs</li><li>Step three — <strong><u>submit</u></strong> the form</li></ul><p>This is the final paragraph confirming all rich text tag types render correctly.</p>" }
+  ]
+}

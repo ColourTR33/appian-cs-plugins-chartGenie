@@ -7,13 +7,10 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.StackedBarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
-import org.jfree.chart.title.LegendTitle;
-import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.appiancs.plugins.chartgenie.dto.ChartConfiguration;
@@ -45,13 +42,7 @@ public class StackedColumnStrategy implements ChartGeneratorStrategy {
 
     JFreeChart chart = ChartFactory.createStackedBarChart(config.getTitle(), "", "", dataset, PlotOrientation.VERTICAL, true, false, false);
 
-    Color currentBgColor = Color.WHITE;
-    if (config.getBackgroundColor() != null && !config.getBackgroundColor().isEmpty()) {
-      try {
-        currentBgColor = Color.decode("#" + config.getBackgroundColor().replace("#", ""));
-      } catch (NumberFormatException ignored) {
-      }
-    }
+    Color currentBgColor = ChartStyleUtils.decodeBackgroundColor(config.getBackgroundColor());
     chart.setBackgroundPaint(currentBgColor);
     chart.setBorderVisible(false);
 
@@ -81,43 +72,11 @@ public class StackedColumnStrategy implements ChartGeneratorStrategy {
     renderer.setBarPainter(new StandardBarPainter());
     renderer.setShadowVisible(false);
     renderer.setDrawBarOutline(false);
-    renderer.setSeriesPaint(0, decodeColor(config.getPrimaryColor(), COLOR_PRIMARY_DEFAULT));
+    renderer.setSeriesPaint(0, ChartStyleUtils.decodeColor(config.getPrimaryColor(), COLOR_PRIMARY_DEFAULT));
 
-    if ("NONE".equalsIgnoreCase(config.getLegendPosition())) {
-      chart.removeLegend();
-    } else if (chart.getLegend() != null) {
-      LegendTitle legend = chart.getLegend();
-      legend.setBackgroundPaint(currentBgColor);
-      legend.setItemFont(new Font(fontName, Font.PLAIN, fontSize));
-      legend.setFrame(BlockBorder.NONE);
-      if (config.getLegendPosition() != null) {
-        switch (config.getLegendPosition().toUpperCase()) {
-          case "RIGHT":
-            legend.setPosition(RectangleEdge.RIGHT);
-            break;
-          case "TOP":
-            legend.setPosition(RectangleEdge.TOP);
-            break;
-          case "LEFT":
-            legend.setPosition(RectangleEdge.LEFT);
-            break;
-          default:
-            legend.setPosition(RectangleEdge.BOTTOM);
-            break;
-        }
-      }
-    }
+    ChartStyleUtils.applyLegendPosition(chart, config.getLegendPosition(), currentBgColor,
+      new Font(fontName, Font.PLAIN, fontSize));
 
     return chart;
-  }
-
-  private Color decodeColor(String hexStr, Color fallback) {
-    if (hexStr == null || hexStr.isEmpty())
-      return fallback;
-    try {
-      return Color.decode(hexStr.startsWith("#") ? hexStr : "#" + hexStr);
-    } catch (NumberFormatException e) {
-      return fallback;
-    }
   }
 }

@@ -16,6 +16,9 @@ Unlike standard document generation tools, ChartGenie focuses specifically on **
 * **Smart Layouts:** Supports Sidebars, Page Breaks, Headings, and Paragraphs.
 * **Resilience:** Built-in protection against memory overruns, null data, and invalid inputs.
 * **Modern Aesthetics:** Charts use automatic monochromatic palette generation and clean, flat design principles.
+* **Rich Text Styling:** Full HTML rich text support (`<b>`, `<i>`, `<u>`, `<span style="color">`, `<ul>`, `<li>`) in table cells.
+* **Font Control:** Per-table `headerFontSize` and `bodyFontSize` (8–72pt) for precise typography.
+* **Nested Tables:** Embed tables within table cells up to 3 levels deep for complex report layouts.
 
 ---
 
@@ -69,6 +72,62 @@ The `Generate Chart Report` service expects a JSON structure with two main block
 * **PARAGRAPH:** Adds standard text.
 * **PAGE_BREAK:** Forces a new page.
 * **CHART:** Renders a visual chart.
+* **REPORT_TABLE:** Renders a styled data table.
+* **SIDEBAR_LAYOUT:** Two-column layout with main content and a sidebar.
+* **RICH_TEXT:** Renders HTML rich text content.
+
+### REPORT_TABLE Configuration (`tableConfig`)
+| Field | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `headers` | String[] | Column header labels. | `null` |
+| `columnWidths` | Integer[] | Column widths as percentages (must sum to 100). | `null` |
+| `rows` | Cell[][] | 2D array of cell config objects. | `null` |
+| `headerBackgroundColor` | String | Hex color for header row background. | `000000` |
+| `headerTextColor` | String | Hex color for header row text. | `FFFFFF` |
+| `oddRowColor` | String | Hex color for alternating row shading. | `null` |
+| `bordersEnabled` | Boolean | Show/hide table borders. | `true` |
+| `headerFontSize` | Integer | Font size for header row (8–72pt). | document default |
+| `bodyFontSize` | Integer | Font size for data rows (8–72pt). | document default |
+
+### Cell Configuration (`rows[n][n]`)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `text` | String | Plain text or HTML rich text content. |
+| `colspan` | Integer | Number of columns this cell spans. |
+| `backgroundColor` | String | Hex color override for this cell's background. |
+| `textColor` | String | Hex color override for this cell's text. |
+| `nestedTable` | TableConfig | A full `tableConfig` object to render as a nested table inside this cell (max 3 levels deep). |
+
+### Nested Table Example
+```json
+{
+  "type": "REPORT_TABLE",
+  "tableConfig": {
+    "headers": ["Category", "Details"],
+    "columnWidths": [30, 70],
+    "headerFontSize": 12,
+    "bodyFontSize": 10,
+    "rows": [
+      [
+        { "text": "Risk" },
+        {
+          "text": "",
+          "nestedTable": {
+            "headers": ["Level", "Score"],
+            "columnWidths": [50, 50],
+            "headerBackgroundColor": "CC0000",
+            "headerTextColor": "FFFFFF",
+            "rows": [
+              [{ "text": "High" }, { "text": "9.2" }],
+              [{ "text": "Medium" }, { "text": "5.1" }]
+            ]
+          }
+        }
+      ]
+    ]
+  }
+}
+```
 
 ---
 

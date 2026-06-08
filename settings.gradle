@@ -1,3 +1,1 @@
 rootProject.name = 'chartgenie'
-
-include 'src:test:java'

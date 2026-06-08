@@ -26,8 +26,11 @@ before_script:
   - add_gradle_credentials
 
 cache:
+  key: '$CI_COMMIT_REF_SLUG'
   paths:
     - .gradle/wrapper
+    - .gradle/caches
+    - .gradle/configuration-cache
 
 workflow:
   rules:
@@ -46,7 +49,7 @@ workflow:
 build:
   stage: Build
   script:
-    - ./gradlew build
+    - ./gradlew classes testClasses
   artifacts:
     paths:
       - build
@@ -78,6 +81,9 @@ CVE Reporting:
 
 Coverage:
   stage: Check
+  needs:
+    - job: run_unit_tests
+      artifacts: true
   script:
     - ./gradlew jacocoTestCoverageVerification
 

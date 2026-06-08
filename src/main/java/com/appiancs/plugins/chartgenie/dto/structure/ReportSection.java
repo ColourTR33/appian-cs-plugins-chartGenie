@@ -8,12 +8,18 @@ import com.appiancs.plugins.chartgenie.dto.TableConfiguration;
 public class ReportSection {
   private String type;
   private String text;
-  private String accentColor; // Fixes Compilation Error
+  private String accentColor;
   private ChartConfiguration chartConfig;
   private List<ReportSection> sidebarContent;
   private List<ReportSection> mainContent;
   private TableConfiguration tableConfig;
   private Double leftColumnRatio;
+  private String title;
+
+  // IMAGE section fields
+  private Long imageDocumentId;
+  private Integer imageWidthPercent; // 1–100, default 90
+  private String imageAlignment; // LEFT, CENTER, RIGHT (default CENTER)
 
   public ReportSection() {
   }
@@ -82,13 +88,35 @@ public class ReportSection {
     this.tableConfig = tableConfig;
   }
 
-  private String title;
-
   public String getTitle() {
     return title;
   }
 
   public void setTitle(String title) {
     this.title = title;
+  }
+
+  public Long getImageDocumentId() {
+    return imageDocumentId;
+  }
+
+  public void setImageDocumentId(Long imageDocumentId) {
+    this.imageDocumentId = imageDocumentId;
+  }
+
+  public Integer getImageWidthPercent() {
+    return imageWidthPercent;
+  }
+
+  public void setImageWidthPercent(Integer imageWidthPercent) {
+    this.imageWidthPercent = imageWidthPercent;
+  }
+
+  public String getImageAlignment() {
+    return imageAlignment;
+  }
+
+  public void setImageAlignment(String imageAlignment) {
+    this.imageAlignment = imageAlignment;
   }
 }

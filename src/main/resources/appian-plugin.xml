@@ -2,7 +2,8 @@
   <plugin-info>
     <description>A suite of services for generating charts and embedding them into Microsoft Word documents.</description>
     <vendor name="Appian Customer Success" url="https://community.appian.com" />
-    <version>1.2.5</version>
+    <version>1.3.1</version>
+    <application-version min="25.2" />
     <osgi-compliant>true</osgi-compliant>
   </plugin-info>
 
@@ -42,6 +43,42 @@
   </smart-service>
 
 
+  <smart-service name="Generate Chart Report (PDF)" key="GenerateChartReportPdf"
+    class="com.appiancs.plugins.chartgenie.GenerateChartReportPdf">
+    <description>Generates a PDF report with embedded charts based on a JSON payload. Identical inputs to Generate Chart Report
+      but outputs a .pdf file.</description>
+    <order-index>15</order-index>
+    <icon-id>DOC_GEN</icon-id>
+
+    <input-params>
+      <input-param name="jsonPayload" type="STRING" required="true" label="JSON Payload">
+        <description>The JSON configuration defining sections, data, and branding (same schema as Generate Chart Report).</description>
+      </input-param>
+      <input-param name="templateDocument" type="DOCUMENT" required="true" label="Template Document">
+        <description>The base Word document (DOCX) to act as the template.</description>
+      </input-param>
+      <input-param name="newDocumentName" type="STRING" required="true" label="New Document Name">
+        <description>The name of the generated PDF file (without extension).</description>
+      </input-param>
+      <input-param name="saveInFolder" type="FOLDER" required="true" label="Save In Folder">
+        <description>The Appian Folder where the PDF will be saved.</description>
+      </input-param>
+      <input-param name="includeQrCode" type="BOOLEAN" required="false" label="Include QR Code">
+        <description>Flag to append a QR code to the report.</description>
+      </input-param>
+      <input-param name="qrCodeUrl" type="STRING" required="false" label="QR Code URL">
+        <description>The URL or text to encode in the QR code.</description>
+      </input-param>
+    </input-params>
+
+    <output-params>
+      <output-param name="newDocument" type="DOCUMENT" label="New PDF Document" />
+      <output-param name="errorOccurred" type="BOOLEAN" label="Error Occurred" />
+      <output-param name="errorMessage" type="STRING" label="Error Message" />
+    </output-params>
+  </smart-service>
+
+
   <smart-service name="Generate Chart Image" key="GenerateChartImage"
     class="com.appiancs.plugins.chartgenie.GenerateChartImage">
     <description>Generates a standalone PNG chart image and saves it to Appian.</description>
@@ -60,6 +97,10 @@
       </input-param>
       <input-param name="primaryColor" type="STRING" required="false" label="Primary Color">
         <description>Hex code (e.g., 303030) for the main chart color.</description>
+      </input-param>
+      <input-param name="multiSeriesJson" type="STRING" required="false" label="Multi-Series JSON">
+        <description>JSON array of ChartDataPoint objects [{"series":"A","category":"Jan","value":10},...] for
+          grouped/multi-series charts. If supplied, dataCategories and dataValues are ignored.</description>
       </input-param>
       <input-param name="targetFolder" type="FOLDER" required="true" label="Target Folder" />
       <input-param name="targetName" type="STRING" required="true" label="Target Name" />

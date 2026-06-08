@@ -1,0 +1,143 @@
+{
+  "settings": {
+    "orientation": "PORTRAIT",
+    "pageSize": "A4",
+    "headerText": "ChartGenie — HTML Markup Rendering Test",
+    "subheaderText": "Full coverage of every supported HTML tag, combination and edge case",
+    "headerColor": "00395D",
+    "footerText": "INTERNAL — HTML Markup Test v1.0",
+    "reportDate": "05 06 2026",
+    "auditReference": "HTML Renderer Test"
+  },
+  "sections": [
+
+    { "type": "HEADING", "text": "1. Inline Text Formatting Tags" },
+
+    { "type": "HEADING2", "text": "1.1 <b> and <strong> — Bold" },
+    { "type": "RICH_TEXT", "text": "<p>This uses <b>b tag bold</b> and this uses <strong>strong tag bold</strong> — both should render identically.</p><p>Mixed: normal then <b>bold then</b> normal again.</p>" },
+
+    { "type": "HEADING2", "text": "1.2 <i> and <em> — Italic" },
+    { "type": "RICH_TEXT", "text": "<p>This uses <i>i tag italic</i> and this uses <em>em tag italic</em> — both should render identically.</p><p>Mixed: normal then <i>italic then</i> normal again.</p>" },
+
+    { "type": "HEADING2", "text": "1.3 <u> — Underline" },
+    { "type": "RICH_TEXT", "text": "<p>This uses <u>u tag underline</u> in the middle of a sentence.</p><p>Underline at start: <u>underlined from the beginning</u> and then normal text.</p>" },
+
+    { "type": "HEADING2", "text": "1.4 <span style=\"color:\"> — Hex and RGB colours" },
+    { "type": "RICH_TEXT", "text": "<p>Hex colour: <span style=\"color:#CC0000\">red via hex #CC0000</span></p><p>Hex colour: <span style=\"color:#007700\">green via hex #007700</span></p><p>Hex colour: <span style=\"color:#1E3C96\">blue via hex #1E3C96</span></p><p>RGB colour: <span style=\"color:rgb(255,140,0)\">orange via rgb(255,140,0)</span></p><p>RGB colour: <span style=\"color:rgb(128,0,128)\">purple via rgb(128,0,128)</span></p>" },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "2. Combined Inline Styles" },
+
+    { "type": "HEADING2", "text": "2.1 Bold + Italic" },
+    { "type": "RICH_TEXT", "text": "<p>Using nested tags: <b><i>bold and italic together</i></b></p><p>Using strong + em: <strong><em>strong and em together</em></strong></p><p>Reversed nesting: <i><b>italic wrapping bold</b></i></p>" },
+
+    { "type": "HEADING2", "text": "2.2 Bold + Underline" },
+    { "type": "RICH_TEXT", "text": "<p><b><u>bold and underlined</u></b> — nested b then u.</p><p><u><b>underline wrapping bold</b></u> — reversed nesting.</p>" },
+
+    { "type": "HEADING2", "text": "2.3 Italic + Underline" },
+    { "type": "RICH_TEXT", "text": "<p><i><u>italic and underlined</u></i></p><p><u><em>underline wrapping em</em></u></p>" },
+
+    { "type": "HEADING2", "text": "2.4 Bold + Italic + Underline — Triple combination" },
+    { "type": "RICH_TEXT", "text": "<p><b><i><u>all three: bold, italic and underlined</u></i></b></p><p><strong><em><u>all three using strong, em, u</u></em></strong></p>" },
+
+    { "type": "HEADING2", "text": "2.5 Colour + Bold" },
+    { "type": "RICH_TEXT", "text": "<p><span style=\"color:#CC0000\"><b>red bold text</b></span></p><p><b><span style=\"color:#007700\">bold green text — span inside b</span></b></p>" },
+
+    { "type": "HEADING2", "text": "2.6 Colour + Italic" },
+    { "type": "RICH_TEXT", "text": "<p><span style=\"color:#1E3C96\"><em>blue italic text</em></span></p><p><em><span style=\"color:rgb(200,100,0)\">italic orange via rgb</span></em></p>" },
+
+    { "type": "HEADING2", "text": "2.7 Colour + Bold + Italic + Underline — Maximum combination" },
+    { "type": "RICH_TEXT", "text": "<p><span style=\"color:#CC0000\"><b><i><u>red, bold, italic, underlined</u></i></b></span></p><p><b><em><u><span style=\"color:#007700\">green, bold, italic, underlined — span innermost</span></u></em></b></p>" },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "3. Block Elements" },
+
+    { "type": "HEADING2", "text": "3.1 <p> — Paragraph blocks" },
+    { "type": "RICH_TEXT", "text": "<p>First paragraph — standalone block.</p><p>Second paragraph — new block after first.</p><p>Third paragraph with <b>inline bold</b> and <em>inline italic</em> inside the block.</p>" },
+
+    { "type": "HEADING2", "text": "3.2 <br> — Line breaks within a paragraph" },
+    { "type": "RICH_TEXT", "text": "<p>Line one in the paragraph.<br/>Line two after a br tag.<br/>Line three after another br tag.<br/>Line four — final line.</p>" },
+
+    { "type": "HEADING2", "text": "3.3 <div> — Division block" },
+    { "type": "RICH_TEXT", "text": "<div>First div block of text.</div><div>Second div block — should start on a new line.</div><div><b>Third div</b> with inline bold.</div>" },
+
+    { "type": "HEADING2", "text": "3.4 <ul> + <li> — Unordered bullet list" },
+    { "type": "RICH_TEXT", "text": "<ul><li>First bullet item</li><li>Second bullet item</li><li>Third bullet item</li><li>Fourth bullet item</li></ul>" },
+
+    { "type": "HEADING2", "text": "3.5 <ol> + <li> — Ordered list (rendered as bullets — ol treated same as ul)" },
+    { "type": "RICH_TEXT", "text": "<ol><li>First ordered item</li><li>Second ordered item</li><li>Third ordered item</li></ol>" },
+
+    { "type": "HEADING2", "text": "3.6 List items with inline formatting" },
+    { "type": "RICH_TEXT", "text": "<ul><li><b>Bold</b> bullet item</li><li><em>Italic</em> bullet item</li><li><u>Underlined</u> bullet item</li><li><span style=\"color:#CC0000\">Red coloured</span> bullet item</li><li><b><i><u>Triple-styled</u></i></b> bullet item</li><li>Normal bullet followed by <strong>inline bold mid-sentence</strong> and then normal again</li></ul>" },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "4. Mixed Block and Inline" },
+
+    { "type": "HEADING2", "text": "4.1 Paragraphs mixed with lists" },
+    { "type": "RICH_TEXT", "text": "<p>Introductory paragraph before the list.</p><ul><li>First bullet</li><li>Second bullet</li><li>Third bullet</li></ul><p>Closing paragraph after the list with <b>bold</b> text.</p>" },
+
+    { "type": "HEADING2", "text": "4.2 Multiple block types in sequence" },
+    { "type": "RICH_TEXT", "text": "<p><strong>Section A</strong> — first paragraph with bold heading inline.</p><div>A div block in the middle.</div><p>Back to a paragraph after the div.</p><ul><li>Bullet A</li><li>Bullet B</li></ul><p>Final paragraph after the list.</p>" },
+
+    { "type": "HEADING2", "text": "4.3 Line breaks inside list items" },
+    { "type": "RICH_TEXT", "text": "<ul><li>Item one — first line<br/>Item one — second line after br</li><li>Item two — single line</li><li>Item three — first line<br/>Item three — second line<br/>Item three — third line</li></ul>" },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "5. HTML in Table Cells" },
+    { "type": "TEXT", "text": "All the same HTML tags work inside REPORT_TABLE cell text fields. This section exercises them in a table context." },
+
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Tag(s) Tested", "Rendered Output"],
+        "columnWidths": [30, 70],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 13,
+        "bodyFontSize": 11,
+        "oddRowColor": "F5F5F5",
+        "bordersEnabled": true,
+        "rows": [
+          [{ "text": "<b> bold" },              { "text": "<b>This cell content is bold</b>" }],
+          [{ "text": "<em> italic" },            { "text": "<em>This cell content is italic</em>" }],
+          [{ "text": "<u> underline" },          { "text": "<u>This cell content is underlined</u>" }],
+          [{ "text": "<b><i> bold+italic" },     { "text": "<b><i>This is bold and italic combined</i></b>" }],
+          [{ "text": "<span> hex colour" },      { "text": "<span style=\"color:#CC0000\">This text is red via hex</span>" }],
+          [{ "text": "<span> rgb colour" },      { "text": "<span style=\"color:rgb(0,100,200)\">This text is blue via RGB</span>" }],
+          [{ "text": "<p> paragraphs" },         { "text": "<p>First paragraph in a cell.</p><p>Second paragraph in the same cell.</p>" }],
+          [{ "text": "<br> line break" },        { "text": "Line one in cell.<br/>Line two after br in cell.<br/>Line three." }],
+          [{ "text": "<ul><li> bullets" },       { "text": "<ul><li>Bullet A in cell</li><li>Bullet B in cell</li><li>Bullet C in cell</li></ul>" }],
+          [{ "text": "Max combination" },        { "text": "<p><b>Bold para</b></p><ul><li><span style=\"color:#CC0000\"><b><u>Red bold underline bullet</u></b></span></li><li><em>Italic bullet</em></li></ul><p><span style=\"color:#007700\">Green closing para</span></p>" }],
+          [{ "text": "Stripped tags (safety)" }, { "text": "<script>alert('xss')</script><b>Script stripped, bold preserved</b><a href='http://evil.com'>link stripped</a>" }]
+        ]
+      }
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "6. Edge Cases" },
+
+    { "type": "HEADING2", "text": "6.1 Empty tags — should render nothing / blank line" },
+    { "type": "RICH_TEXT", "text": "<p></p><p>Paragraph after empty paragraph.</p><b></b>Normal text after empty b tag.<br/>" },
+
+    { "type": "HEADING2", "text": "6.2 Deeply nested inline styles" },
+    { "type": "RICH_TEXT", "text": "<p><b><i><u><span style=\"color:#1E3C96\"><b>Four levels deep: outer b, i, u, span, inner b</b></span></u></i></b></p>" },
+
+    { "type": "HEADING2", "text": "6.3 Plain text mixed with HTML — no tags" },
+    { "type": "RICH_TEXT", "text": "This is plain text with no HTML tags at all. The renderer should treat it as a single plain text run." },
+
+    { "type": "HEADING2", "text": "6.4 Unsupported tags — stripped, content preserved" },
+    { "type": "RICH_TEXT", "text": "<p>These tags are <s>strikethrough — stripped</s>, <sup>superscript — stripped</sup>, <sub>subscript — stripped</sub>, but the text content should <b>still appear</b> in the output.</p>" },
+
+    { "type": "HEADING2", "text": "6.5 Special characters and Unicode" },
+    { "type": "RICH_TEXT", "text": "<p>Special characters: &amp; &lt; &gt; &quot; — all should render as literals.</p><p>Unicode: \u2014 (em dash), \u2013 (en dash), \u2019 (smart quote), \u00a9 (copyright), \u2022 (bullet symbol).</p><p>Emoji treated as text: \u2705 \u274c \u26a0</p>" },
+
+    { "type": "HEADING2", "text": "6.6 Long content in a single rich text block" },
+    { "type": "RICH_TEXT", "text": "<p><b>Extended paragraph test.</b> This paragraph contains a large volume of text mixed with inline formatting to verify that line wrapping, paragraph flow and run continuity all work correctly across multiple lines of content in a single paragraph block. The text continues with <em>italic segments</em> and <span style=\"color:#CC0000\">coloured segments</span> and <u>underlined segments</u> appearing at various points throughout the paragraph to exercise the style inheritance mechanism across word boundaries.</p><p>Second large paragraph: <b>Lorem ipsum</b> dolor sit amet, <em>consectetur adipiscing</em> elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. <u>Ut enim ad minim veniam</u>, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. <span style=\"color:#007700\">Duis aute irure dolor</span> in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>" }
+
+  ]
+}

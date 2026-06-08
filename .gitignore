@@ -12,9 +12,18 @@
 /.project
 /.classpath
 
+# Office lock files
+~$*
+
+# Local test artefacts (not part of the plugin)
+*.docx
+*.exec
+payload.json
+
 # Inclusions
 !/.settings/greclipse.properties
 !/.settings/org.eclipse.jdt.core.prefs
 !/.settings/org.eclipse.jdt.ui.prefs
 !/.settings/org.eclipse.wst.xml.core.prefs
 !/.idea/eclipseCodeFormatter.xml
+!/examples/*.json

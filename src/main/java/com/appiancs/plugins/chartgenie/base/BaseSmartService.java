@@ -3,7 +3,8 @@ package com.appiancs.plugins.chartgenie.base;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.appiancorp.suiteapi.content.ContentService;
 import com.appiancorp.suiteapi.process.framework.AppianSmartService;
@@ -11,52 +12,28 @@ import com.appiancorp.suiteapi.process.framework.Input;
 import com.appiancorp.suiteapi.process.framework.Required;
 import com.appiancs.plugins.chartgenie.dto.ServiceResult;
 
-/**
- * An abstract base class for all smart services in this plugin.
- * <p>
- * It centralises common functionality, such as error handling,
- * serialization safety, and standard output parameters.
- * </p>
- */
 public abstract class BaseSmartService extends AppianSmartService implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  // -- Services --
-  // Transient is required so Appian doesn't try to serialize these services
-  // when the process pauses/checkpoints.
   protected final transient ContentService contentService;
+
   protected final transient Logger log;
 
-  // -- Outputs --
   private boolean errorOccurred;
   private String errorMessage;
 
-  /**
-   * Constructor that initialises the base service dependencies.
-   *
-   * @param contentService
-   *          The Appian ContentService (must not be null).
-   */
   public BaseSmartService(ContentService contentService) {
     super();
     this.contentService = Objects.requireNonNull(contentService, "ContentService cannot be null");
 
-    // Initialize the logger specifically for the SUBCLASS (e.g. GenerateChartReport)
-    // This ensures logs show the correct class name, not "BaseSmartService".
-    this.log = Logger.getLogger(this.getClass());
+    // FIXED: Correct SLF4J initialization for subclasses
+    this.log = LoggerFactory.getLogger(this.getClass());
 
-    // Initialize defaults
     this.errorOccurred = false;
     this.errorMessage = "";
   }
 
-  /**
-   * Standard handler for domain-specific ServiceResults.
-   *
-   * @param result
-   *          The result object returned by the internal service layer.
-   */
   protected void handleResult(ServiceResult<?> result) {
     if (result == null) {
       handleException(new IllegalStateException("Service returned null result."), "System Error");
@@ -66,52 +43,60 @@ public abstract class BaseSmartService extends AppianSmartService implements Ser
     if (result.isSuccess()) {
       this.errorOccurred = false;
       this.errorMessage = null;
-      if (log.isDebugEnabled()) {
-        log.debug("Operation completed successfully.");
-      }
+      // FIXED: SLF4J uses curly braces {} for parameters, which is more efficient
+      log.debug("Operation completed successfully.");
     } else {
-      // Logic Failure (e.g., "Template not found") - Log as WARN, not ERROR
-      log.warn("Business Logic Failure: " + result.getErrorMessage());
+      log.warn("Business Logic Failure: {}", result.getErrorMessage());
       this.errorOccurred = true;
       this.errorMessage = result.getErrorMessage();
     }
   }
 
-  /**
-   * Standard handler for unexpected Exceptions.
-   *
-   * @param exception
-   *          The exception caught.
-   * @param contextMessage
-   *          A brief description of what was happening.
-   */
   protected void handleException(Exception exception, String contextMessage) {
-    String cleanMessage = exception.getMessage() != null ? exception.getMessage() : exception.toString();
-    String finalMsg = String.format("%s: %s", contextMessage, cleanMessage);
+    // SECURITY FIX: Sanitize user input to prevent CWE-117/93 log injection
+    String sanitizedContext = sanitizeForLogging(contextMessage);
+    String cleanMessage = exception.getMessage() != null ? sanitizeForLogging(exception.getMessage())
+      : exception.getClass().getSimpleName();
 
-    // Log full stack trace for Admins (ERROR level)
-    log.error(finalMsg, exception);
+    // Use parameterized logging to prevent injection
+    log.error("Error in {}: {}", sanitizedContext, cleanMessage, exception);
 
-    // Set user-friendly outputs for the Process Designer
+    // Store sanitized message for output
+    String finalMsg = String.format("%s: %s", sanitizedContext, cleanMessage);
     this.errorOccurred = true;
     this.errorMessage = finalMsg;
   }
 
-  // -- Standard Appian Outputs --
-
   /**
-   * Returns whether an error occurred during execution.
-   * * @return true if an error occurred.
+   * Sanitizes input for logging to prevent CWE-117 (Log Injection) and CWE-93 (CRLF Injection) attacks.
+   * Removes control characters, line breaks, and other potentially dangerous characters.
+   * 
+   * @param input
+   *          The input string to sanitize
+   * @return Sanitized string safe for logging
    */
+  protected String sanitizeForLogging(String input) {
+    if (input == null) {
+      return "null";
+    }
+
+    // Limit input length to prevent log flooding
+    if (input.length() > 500) {
+      input = input.substring(0, 500) + "[TRUNCATED]";
+    }
+
+    // Remove CRLF characters and control characters that could be used for log injection
+    return input.replaceAll("[\\r\\n\\t]", "_")
+      .replaceAll("[\\p{Cntrl}]", "")
+      .replaceAll("[\\x00-\\x1F\\x7F]", "")
+      .trim();
+  }
+
   @Input(required = Required.OPTIONAL)
   public boolean isErrorOccurred() {
     return errorOccurred;
   }
 
-  /**
-   * Returns the error message if one exists.
-   * * @return The error message string.
-   */
   @Input(required = Required.OPTIONAL)
   public String getErrorMessage() {
     return errorMessage;

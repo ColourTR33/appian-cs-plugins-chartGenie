@@ -1,0 +1,37 @@
+{
+  "settings": {
+    "orientation": "PORTRAIT",
+    "headerText": "Security Test Report | ChartGenie",
+    "headerColor": "8FAADC"
+  },
+  "sections": [
+    {
+      "type": "HEADING", 
+      "text": "Security Fixes Regression Test"
+    },
+    {
+      "type": "TEXT", 
+      "text": "This report tests basic functionality after implementing security fixes."
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "BAR",
+        "title": "Simple Bar Chart Test",
+        "width": 800,
+        "height": 600,
+        "backgroundColor": "F2F2F2",
+        "legendPosition": "BOTTOM",
+        "baseFontSize": 18,
+        "multiSeriesData": [
+          { "series": "Series A", "category": "Q1", "value": 100 },
+          { "series": "Series A", "category": "Q2", "value": 120 },
+          { "series": "Series A", "category": "Q3", "value": 110 },
+          { "series": "Series B", "category": "Q1", "value": 90 },
+          { "series": "Series B", "category": "Q2", "value": 95 },
+          { "series": "Series B", "category": "Q3", "value": 105 }
+        ]
+      }
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 package com.appiancs.plugins.chartgenie.strategies.impl;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Paint;
+import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
 
@@ -49,6 +52,11 @@ public class PieChartStrategy implements ChartGeneratorStrategy {
 
     PiePlot plot = (PiePlot) chart.getPlot();
 
+    // Explode every slice outward 3% to create spacing between slices (matches donut style)
+    for (int i = 0; i < dataset.getItemCount(); i++) {
+      plot.setExplodePercent(dataset.getKey(i), 0.03);
+    }
+
     plot.setDrawingSupplier(new DefaultDrawingSupplier(
       BARCLAYS_BLUES,
       DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE,
@@ -67,7 +75,6 @@ public class PieChartStrategy implements ChartGeneratorStrategy {
       Shape largeLegendBox = new Ellipse2D.Double(-15, -15, 30, 30);
       plot.setLegendItemShape(largeLegendBox);
     }
-    ;
 
     StandardPieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator(
       "{2}",

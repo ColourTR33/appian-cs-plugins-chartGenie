@@ -1,0 +1,292 @@
+{
+  "settings": {
+    "orientation": "PORTRAIT",
+    "pageSize": "A4",
+    "headerText": "ChartGenie — Nested Table Capability Test",
+    "subheaderText": "Maximum nesting depth · All formatting options · Font control · Rich text · Colspan",
+    "headerColor": "00395D",
+    "footerText": "INTERNAL — ChartGenie Test Suite",
+    "reportDate": "05 06 2026",
+    "auditReference": "Nested Table Stress Test v1.0"
+  },
+  "sections": [
+    { "type": "HEADING", "text": "Level 1 — Basic Nested Table with Per-Cell Colours" },
+    { "type": "TEXT",    "text": "The outer table has a dark header, alternating row shading, 14pt body font, and a nested Level-2 table inside one of its cells." },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Category", "Details"],
+        "columnWidths": [30, 70],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 14,
+        "bodyFontSize": 11,
+        "oddRowColor": "EBF0FA",
+        "bordersEnabled": true,
+        "rows": [
+          [
+            { "text": "Plain text cell", "backgroundColor": "FFFFFF" },
+            { "text": "This cell contains only plain text with a white background and default styling." }
+          ],
+          [
+            { "text": "Coloured text", "textColor": "CC0000" },
+            { "text": "This cell has red body text applied via the textColor override." }
+          ],
+          [
+            { "text": "Rich text cell" },
+            { "text": "<b>Bold</b>, <em>italic</em>, <u>underline</u> and <span style=\"color:#007700\">green colour</span> all in one cell." }
+          ],
+          [
+            { "text": "Colspan banner", "colspan": 2, "backgroundColor": "00AEEF", "textColor": "FFFFFF" }
+          ],
+          [
+            { "text": "Level-2 Nested Table", "backgroundColor": "FFF8E1" },
+            {
+              "text": "",
+              "nestedTable": {
+                "headers": ["Risk", "Rating", "Owner"],
+                "columnWidths": [40, 20, 40],
+                "headerBackgroundColor": "CC0000",
+                "headerTextColor": "FFFFFF",
+                "headerFontSize": 10,
+                "bodyFontSize": 9,
+                "oddRowColor": "FFF0F0",
+                "bordersEnabled": true,
+                "rows": [
+                  [
+                    { "text": "Data Leakage" },
+                    { "text": "Critical", "textColor": "CC0000" },
+                    { "text": "InfoSec" }
+                  ],
+                  [
+                    { "text": "Access Control" },
+                    { "text": "Major", "textColor": "FF6600" },
+                    { "text": "IAM Team" }
+                  ],
+                  [
+                    { "text": "Audit Logging" },
+                    { "text": "Limited", "textColor": "007700" },
+                    { "text": "Compliance" }
+                  ],
+                  [
+                    {
+                      "text": "Level-3 nested",
+                      "colspan": 2,
+                      "backgroundColor": "E8F4FD"
+                    },
+                    {
+                      "text": "",
+                      "nestedTable": {
+                        "headers": ["Sub-Control", "Status"],
+                        "columnWidths": [60, 40],
+                        "headerBackgroundColor": "005A8C",
+                        "headerTextColor": "FFFFFF",
+                        "headerFontSize": 9,
+                        "bodyFontSize": 8,
+                        "bordersEnabled": true,
+                        "rows": [
+                          [
+                            { "text": "<b>MFA Enabled</b>" },
+                            { "text": "PASS", "textColor": "007700" }
+                          ],
+                          [
+                            { "text": "<b>Session Timeout</b>" },
+                            { "text": "FAIL", "textColor": "CC0000" }
+                          ],
+                          [
+                            { "text": "<b>Encryption at Rest</b>" },
+                            { "text": "PASS", "textColor": "007700" }
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                ]
+              }
+            }
+          ],
+          [
+            { "text": "After nested", "backgroundColor": "E8F4FD" },
+            { "text": "This row appears after the nested table cell to confirm row ordering is intact." }
+          ]
+        ]
+      }
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "Level 2 — Font Size Extremes and Alternating Rows" },
+    { "type": "TEXT",    "text": "This table uses the smallest (8pt) and largest (20pt) practical font sizes, and a nested table inside a coloured cell." },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Field", "Value", "Notes"],
+        "columnWidths": [20, 40, 40],
+        "headerBackgroundColor": "1E3C96",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 16,
+        "bodyFontSize": 11,
+        "oddRowColor": "F0F4FF",
+        "bordersEnabled": true,
+        "rows": [
+          [
+            { "text": "Entity",   "textColor": "00395D" },
+            { "text": "BBPLC",    "backgroundColor": "E8F4FD" },
+            { "text": "Barclays Bank PLC — primary legal entity" }
+          ],
+          [
+            { "text": "Scope" },
+            { "text": "Global CIB" },
+            { "text": "Corporate and Investment Banking worldwide" }
+          ],
+          [
+            { "text": "Rating",   "textColor": "CC0000" },
+            { "text": "Critical", "backgroundColor": "FFE8E8", "textColor": "CC0000" },
+            { "text": "Highest severity — immediate remediation required" }
+          ],
+          [
+            { "text": "Sub-detail spans 3", "colspan": 3, "backgroundColor": "00395D", "textColor": "FFFFFF" }
+          ],
+          [
+            { "text": "Detail",   "textColor": "333333" },
+            {
+              "text": "",
+              "colspan": 2,
+              "nestedTable": {
+                "headers": ["Attribute", "Actual", "Expected"],
+                "columnWidths": [33, 33, 34],
+                "headerBackgroundColor": "4CAF50",
+                "headerTextColor": "FFFFFF",
+                "headerFontSize": 10,
+                "bodyFontSize": 9,
+                "oddRowColor": "F0FFF0",
+                "bordersEnabled": true,
+                "rows": [
+                  [
+                    { "text": "<b>Uptime SLA</b>" },
+                    { "text": "99.2%", "textColor": "CC0000" },
+                    { "text": "99.9%" }
+                  ],
+                  [
+                    { "text": "<b>Response Time</b>" },
+                    { "text": "245ms", "textColor": "007700" },
+                    { "text": "300ms" }
+                  ],
+                  [
+                    { "text": "<b>Error Rate</b>" },
+                    { "text": "0.8%",  "textColor": "CC0000" },
+                    { "text": "< 0.1%" }
+                  ],
+                  [
+                    { "text": "<b>Coverage</b>" },
+                    { "text": "87%",   "textColor": "FF6600" },
+                    { "text": "95%" }
+                  ]
+                ]
+              }
+            }
+          ]
+        ]
+      }
+    },
+
+    { "type": "PAGE_BREAK" },
+
+    { "type": "HEADING", "text": "Level 3 — Rich Text Everywhere + Deep Nesting" },
+    { "type": "TEXT",    "text": "Every cell at every level uses rich text. The outer table has no borders (bordersEnabled: false) while the nested tables have full borders." },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Section", "Content"],
+        "columnWidths": [25, 75],
+        "headerBackgroundColor": "333333",
+        "headerTextColor": "FFFFFF",
+        "headerFontSize": 13,
+        "bodyFontSize": 11,
+        "bordersEnabled": false,
+        "rows": [
+          [
+            { "text": "<b>Executive<br/>Summary</b>", "backgroundColor": "F5F5F5" },
+            { "text": "<p>The audit identified <strong>3 Critical</strong>, <strong>5 Major</strong> and <u>2 Limited</u> issues across the in-scope population.</p><p>Management has <em>accepted all findings</em> and committed to remediation by <span style=\"color:#CC0000\"><strong>Q3 2026</strong></span>.</p>" }
+          ],
+          [
+            { "text": "<b>Issue<br/>Detail</b>", "backgroundColor": "EEF0FF" },
+            {
+              "text": "",
+              "nestedTable": {
+                "headers": ["Ref", "Title", "Severity", "Due"],
+                "columnWidths": [8, 52, 20, 20],
+                "headerBackgroundColor": "CC0000",
+                "headerTextColor": "FFFFFF",
+                "headerFontSize": 11,
+                "bodyFontSize": 10,
+                "oddRowColor": "FFF5F5",
+                "bordersEnabled": true,
+                "rows": [
+                  [
+                    { "text": "<b>I-01</b>" },
+                    { "text": "<b>Privileged Access — No periodic review of administrator accounts</b>" },
+                    { "text": "Critical",  "textColor": "CC0000" },
+                    { "text": "30/09/2026" }
+                  ],
+                  [
+                    { "text": "<b>I-02</b>" },
+                    { "text": "<b>Audit Logging — Gaps in SIEM coverage for 3 critical systems</b>" },
+                    { "text": "Major",    "textColor": "FF6600" },
+                    { "text": "31/10/2026" }
+                  ],
+                  [
+                    { "text": "<b>I-03</b>" },
+                    { "text": "<b>Data Classification — Inconsistent tagging on cloud-stored documents</b>" },
+                    { "text": "Major",    "textColor": "FF6600" },
+                    { "text": "31/12/2026" }
+                  ],
+                  [
+                    { "text": "Sub-actions", "colspan": 4, "backgroundColor": "EEEEEE" }
+                  ],
+                  [
+                    { "text": "" },
+                    {
+                      "text": "",
+                      "colspan": 3,
+                      "nestedTable": {
+                        "headers": ["Milestone", "Owner", "Status"],
+                        "columnWidths": [50, 30, 20],
+                        "headerBackgroundColor": "005A8C",
+                        "headerTextColor": "FFFFFF",
+                        "headerFontSize": 9,
+                        "bodyFontSize": 8,
+                        "bordersEnabled": true,
+                        "rows": [
+                          [
+                            { "text": "<b>Implement PAM tooling</b>" },
+                            { "text": "IAM Lead",     "textColor": "00395D" },
+                            { "text": "In Progress", "textColor": "FF6600" }
+                          ],
+                          [
+                            { "text": "<b>Deploy SIEM agents</b>" },
+                            { "text": "SecOps",       "textColor": "00395D" },
+                            { "text": "Open",         "textColor": "CC0000" }
+                          ],
+                          [
+                            { "text": "<b>Classify all cloud assets</b>" },
+                            { "text": "Data Office",  "textColor": "00395D" },
+                            { "text": "Complete",     "textColor": "007700" }
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                ]
+              }
+            }
+          ],
+          [
+            { "text": "<b>Conclusion</b>", "backgroundColor": "E8F8E8" },
+            { "text": "<p><strong>Overall rating: <span style=\"color:#007700\">Satisfactory</span></strong></p><p>Controls are broadly effective. The issues identified are <em>systemic in nature</em> and require <u>sustained management attention</u> through the remediation period.</p>" }
+          ]
+        ]
+      }
+    }
+  ]
+}

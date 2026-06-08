@@ -1,8 +1,11 @@
 package com.appiancs.plugins.chartgenie;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import com.appiancorp.suiteapi.content.ContentConstants;
@@ -16,8 +19,8 @@ import com.appiancorp.suiteapi.process.palette.PaletteInfo;
 import com.appiancs.plugins.chartgenie.base.BaseSmartService;
 import com.appiancs.plugins.chartgenie.dto.structure.ReportRequest;
 import com.appiancs.plugins.chartgenie.dto.structure.ReportSettings;
+import com.appiancs.plugins.chartgenie.service.DocumentUtils;
 import com.appiancs.plugins.chartgenie.service.WordDocumentService;
-import com.appiancs.plugins.chartgenie.utils.DocumentUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -39,10 +42,10 @@ public class GenerateChartReport extends BaseSmartService {
   @Override
   public void run() throws SmartServiceException {
     File tempTemplate = null;
-    File finalReport = null;
+    File finalReportFile = null;
 
     try {
-      // 1. Validation & Lenient Parsing
+      // 1. Validation
       if (jsonPayload == null || jsonPayload.trim().isEmpty()) {
         throw new IllegalArgumentException("JSON Payload is empty.");
       }
@@ -52,7 +55,7 @@ public class GenerateChartReport extends BaseSmartService {
       try {
         request = gson.fromJson(jsonPayload.trim(), ReportRequest.class);
       } catch (Exception e) {
-        throw new IllegalArgumentException("JSON Syntax Error: " + e.getMessage());
+        throw new IllegalArgumentException("JSON Syntax Error: " + e.getMessage(), e);
       }
 
       if (request == null)
@@ -65,27 +68,51 @@ public class GenerateChartReport extends BaseSmartService {
       if (this.qrCodeUrl != null)
         settings.setQrUrl(this.qrCodeUrl);
 
-      // 3. Template Download
+      // 3. Template Download — use NIO temp file anchored to real temp dir (CWE-22/23)
+      Path safeTempDir = Paths.get(System.getProperty("java.io.tmpdir")).toRealPath();
       Document appianDoc = contentService.download(templateDocumentId, ContentConstants.VERSION_CURRENT, false)[0];
-      tempTemplate = File.createTempFile("genie_tpl_", ".docx");
+      Path tempTemplatePath = Files.createTempFile(safeTempDir, "genie_tpl_", ".docx");
+      tempTemplate = tempTemplatePath.toFile();
       try (InputStream in = appianDoc.getInputStream()) {
-        Files.copy(in, tempTemplate.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
       }
 
       // 4. Generation
       WordDocumentService wordService = new WordDocumentService();
-      finalReport = wordService.generateReport(tempTemplate, settings, request.getSections());
+      wordService.setContentService(contentService);
+      byte[] reportBytes = wordService.generateReport(
+        tempTemplate, settings, request.getSections(), request.getVariables());
 
-      // 5. Upload
-      this.newDocumentId = DocumentUtils.uploadDocument(contentService, finalReport, newDocumentName, saveInFolderId, "docx");
+      // 5. Write output to NIO temp file anchored to real temp dir (CWE-22/23)
+      Path finalReportPath = Files.createTempFile(safeTempDir, "genie_output_", ".docx");
+      finalReportFile = finalReportPath.toFile();
+      try (FileOutputStream fos = new FileOutputStream(finalReportFile)) {
+        fos.write(reportBytes);
+      }
 
+      // 6. Upload
+      this.newDocumentId = DocumentUtils.uploadDocument(contentService, finalReportFile, newDocumentName, saveInFolderId, "docx");
+
+      log.info("Successfully generated report: {} with ID: {}", newDocumentName, newDocumentId);
+
+    } catch (IllegalArgumentException e) {
+      // Re-throw with original cause preserved
+      handleException(e, e.getMessage());
     } catch (Exception e) {
-      handleException(e, e instanceof IllegalArgumentException ? e.getMessage() : "Report Generation Failed");
+      log.error("Report generation failed", e);
+      handleException(e, "Report Generation Failed");
     } finally {
-      if (tempTemplate != null)
-        tempTemplate.delete();
-      if (finalReport != null)
-        finalReport.delete();
+      // SECURITY FIX: Check file deletion results and log failures
+      if (tempTemplate != null && tempTemplate.exists()) {
+        if (!tempTemplate.delete()) {
+          log.warn("Failed to delete temporary template file: {}", tempTemplate.getAbsolutePath());
+        }
+      }
+      if (finalReportFile != null && finalReportFile.exists()) {
+        if (!finalReportFile.delete()) {
+          log.warn("Failed to delete temporary report file: {}", finalReportFile.getAbsolutePath());
+        }
+      }
     }
   }
 

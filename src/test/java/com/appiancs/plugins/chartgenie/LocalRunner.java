@@ -23,10 +23,16 @@ public class LocalRunner {
       ReportRequest req = gson.fromJson(json, type);
 
       WordDocumentService service = new WordDocumentService();
-      File result = service.generateReport(new File("template.docx"), req.getSettings(), req.getSections());
+      byte[] result = service.generateReport(new File("template.docx"), req.getSettings(), req.getSections());
 
-      System.out.println("Report Generated: " + result.getAbsolutePath());
-      Desktop.getDesktop().open(result);
+      // Write the result to a file
+      File outputFile = new File("local-test-report.docx");
+      try (java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile)) {
+        fos.write(result);
+      }
+
+      System.out.println("Report Generated: " + outputFile.getAbsolutePath());
+      Desktop.getDesktop().open(outputFile);
     } catch (Exception e) {
       e.printStackTrace();
     }

@@ -1,6 +1,7 @@
 package com.appiancs.plugins.chartgenie.strategies.impl;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Paint;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;

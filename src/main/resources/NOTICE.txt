@@ -1,0 +1,10 @@
+=======================================================================
+BUNDLED DEPENDENCIES
+=======================================================================
+This product bundles JFreeChart, which is available under the GNU Lesser
+General Public License (LGPL) version 2.1 or later.
+Copyright (c) Object Refinery Limited and Contributors.
+
+For details, visit
+https://www.jfree.org/jfreechart/.
+

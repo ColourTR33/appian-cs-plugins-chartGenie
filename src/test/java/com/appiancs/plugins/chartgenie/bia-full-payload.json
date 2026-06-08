@@ -1,0 +1,128 @@
+{
+  "settings": {
+    "orientation": "LANDSCAPE",
+    "pageSize": "A4",
+    "headerText": "BARCLAYS INTERNAL AUDIT (BIA) | FORMAL REPORT TITLE",
+    "subheaderText": "Gideon Hermanus Huysamen A53421425 (ZA) Barclays Africa Group Limited|CORPORATE and INVESTMENT BANKING EXECUTIVE|CIB EXECUTIVES|A424 CIB EXECUTIVES",
+    "headerColor": "ffffff",
+    "headerRating": "Satisfactory",
+    "showRatingInHeader": true,
+    "footerText": "CONFIDENTIAL - Barclays Internal Audit",
+    "reportDate": "02 04 2026",
+    "auditReference": "Test Issues - ADW Enhancements"
+  },
+  "sections": [
+    {
+      "type": "SIDEBAR_LAYOUT",
+      "leftColumnRatio": 0.79,
+      "mainContent": [
+        { "type": "HEADING", "text": "Control Environment" },
+        { "type": "TEXT", "text": "There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. " },
+        { "type": "HEADING", "text": "Approach to Risk and Control" },
+        { "type": "RICH_TEXT", "text": "<p>This test validates whether a user <strong>can successfully access </strong>the Barclays Appian <em>Test environment (</em><em>barclayinttest.appiancloud.com</em><em>) from</em> a <strong>personal device</strong> using <strong>Federation SSO \u2013 SAML Authentication</strong>.</p><p>When user tries to access the barclayinttest.appiancloud.com from personal device, User will be redirected to Barclays Authenticator page.</p><p><strong>Evidence:</strong></p><p><strong>Step 2: User enters credentials and RSA token</strong></p><p><strong>Action</strong>: Provide Valid Credentials in Barclays Authenticator Page.</p><p><strong>Expected Result: </strong>User should not be able to access the Barclays Assure Appian Test site from personal device.</p><p><strong>Actual Result: </strong>Users are <strong>not allowed</strong> to access the Appian test environment from personal devices because <strong>external </strong><strong><u>authentication is disabled</u></strong><strong> by Federation SSO</strong>.</p><p><strong>Evidence:</strong></p><p><br /></p>" }
+      ],
+      "sidebarContent": [
+        { "type": "HEADING", "text": "Data Indicators" },
+        { "type": "CHART", "chartConfig": { "chartType": "DONUT", "title": "Automation of Controls Tested", "centerText": "67%", "width": 600, "height": 600, "multiSeriesData": [ { "category": "Manual Controls", "value": 67 }, { "category": "Automated", "value": 33 } ] } },
+        { "type": "TEXT", "text": " " },
+        { "type": "CHART", "chartConfig": { "chartType": "PIE", "title": "Weighted Issue Indicator", "width": 600, "height": 600, "multiSeriesData": [ { "category": "BIA", "value": 70 }, { "category": "Regulatory", "value": 17 }, { "category": "1LoD / 2LoD", "value": 13 } ] } },
+        { "type": "TEXT", "text": " " },
+        { "type": "CHART", "chartConfig": { "chartType": "BAR", "title": "Total Issues Reported", "width": 600, "height": 600, "multiSeriesData": [ { "category": "Limited", "value": 1 }, { "category": "Major", "value": 2 }, { "category": "Critical", "value": 1 } ] } }
+      ]
+    },
+    { "type": "PAGE_BREAK" },
+    { "type": "HEADING2", "text": "ARC SUMMARY" },
+    { "type": "RICH_TEXT", "text": "<p>This test validates whether a user <strong>can successfully access </strong>the Barclays Appian <em>Test environment (</em><em>barclayinttest.appiancloud.com</em><em>) from</em> a <strong>personal device</strong> using <strong>Federation SSO \u2013 SAML Authentication</strong>.</p><p>When user tries to access the barclayinttest.appiancloud.com from personal device, User will be redirected to Barclays Authenticator page.</p><p><strong>Evidence:</strong></p><p><strong>Step 2: User enters credentials and RSA token</strong></p><p><strong>Action</strong>: Provide Valid Credentials in Barclays Authenticator Page.</p><p><strong>Expected Result: </strong>User should not be able to access the Barclays Assure Appian Test site from personal device.</p><p><strong>Actual Result: </strong>Users are <strong>not allowed</strong> to access the Appian test environment from personal devices because <strong>external </strong><strong><u>authentication is disabled</u></strong><strong> by Federation SSO</strong>.</p><p><strong>Evidence:</strong></p><p><br /></p>" },
+    { "type": "HEADING2", "text": "Additional Context" },
+    { "type": "TEXT", "text": "This test validates whether a user can successfully access the Barclays Appian Test environment (barclayinttest.appiancloud.com) from a personal device using Federation SSO \u2013 SAML Authentication. When user tries to access the barclayinttest.appiancloud.com from personal device, User will be redirected to Barclays Authenticator page. Evidence: Step 2: User enters credentials and RSA token Action: Provide Valid Credentials in Barclays Authenticator Page. Expected Result: User should not be able to access the Barclays Assure Appian Test site from personal device. Actual Result: Users are not allowed to access the Appian test environment from personal devices because external authentication is disabled by Federation SSO. Evidence:" },
+    { "type": "HEADING2", "text": "Business Context" },
+    { "type": "TEXT", "text": "There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters. " },
+    { "type": "HEADING2", "text": "Audit Scope" },
+    { "type": "TEXT", "text": "This test validates whether a user can successfully access the Barclays Appian Test environment (barclayinttest.appiancloud.com) from a personal device using Federation SSO \u2013 SAML Authentication. When user tries to access the barclayinttest.appiancloud.com from personal device, User will be redirected to Barclays Authenticator page. Evidence: Step 2: User enters credentials and RSA token Action: Provide Valid Credentials in Barclays Authenticator Page. Expected Result: User should not be able to access the Barclays Assure Appian Test site from personal device. Actual Result: Users are not allowed to access the Appian test environment from personal devices because external authentication is disabled by Federation SSO. Evidence:" },
+    { "type": "PAGE_BREAK" },
+    { "type": "HEADING", "text": "SMF and Legal Entity Impact" },
+    { "type": "RICH_TEXT", "text": "<p>Include commentary in the below table on the impact of the audit opinion (CE) and issues on the BBPLC, BBUK, BBI, IHC, BBDE Legal Entities.</p><ul><li>Differences in the operation or frequency of the control to the legal entity</li><li>Impact of CE or audit issues that LE Service Recipient should be aware of</li><li>Impact of control homogeneity where applicable</li><li>Regulatory requirements or regulatory requests to provide coverage</li></ul><p>Also include commentary where the relevance of the audit opinion differs across legal entities.</p><ul><li>The critical issues raised in this audit have similar significance to both BBPLC and BBUKPLC.</li><li>The issues in this audit predominantly impact BBPLC, due to the mitigating controls in place in BBUKPLC.</li><li>The issues in this audit impact the availability of systems used for retail customer processes, so have greater impact on BBUKPLC than BBPLC.</li><li>BBPLC represents 80% of risk limits covered in this audit, BBUKPLC represents 20%</li></ul>" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Legal Entity"],
+        "columnWidths": [100],
+        "bordersEnabled": true,
+        "rows": [
+          [{ "text": "IHC - If Audits Start Planned Date is on or after 01 Oct 2025, Legal Entity Stakeholders should be applicable to BBDE and IHC committees alone." }],
+          [{ "text": "BBDE - There is no Inherent Risk Rationale, or wording is under 140 characters, or wording is above 3900 characters. Please ensure rationale is included and wording exceeds 140 characters and under 3900 characters." }]
+        ]
+      }
+    },
+    { "type": "TEXT", "text": "BIA has assessed this audit report is most relevant to the following SMF or SMF equivalent role holders:" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Senior Manager", "Role", "SMF(s)"],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "oddRowColor": "F2F2F2",
+        "columnWidths": [50, 25, 25],
+        "rows": [
+          [{ "text": "Abhinandan Shah (H10039587)" }, { "text": "SMF1" }, { "text": "SMF11 Role" }],
+          [{ "text": "Alistair Currie (G01158518)" }, { "text": "SMF6" }, { "text": "SMF6 Role" }],
+          [{ "text": "Amit Kapadia (H08840059)" }, { "text": "SMF24" }, { "text": "" }],
+          [{ "text": "Antonia Cowdry (G01309775)" }, { "text": "SMF18" }, { "text": "SMF Role Test 1" }]
+        ]
+      }
+    },
+    { "type": "TEXT", "text": "In addition to the SMF or SMF equivalents listed above, BIA has assessed this audit report is most relevant to the following Legal Entity Executive Committee (LE ExCo) Members:" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["Legal Entities"],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "oddRowColor": "F2F2F2",
+        "columnWidths": [100],
+        "rows": [
+          [{ "text": "Andrea Bonafe (G09975340) > BBDE > Executive" }],
+          [{ "text": "Angelo Del Giudice (G09633090) > BBDE > Chief Financial Officer" }],
+          [{ "text": "Christopher Trill (G01408444) > BBDE > Chief Operations Officer" }],
+          [{ "text": "Danielle Manley (G09630742) > BBDE > Treasurer" }],
+          [{ "text": "Darin Thomas (G01255125) > BBDE > Controller and Regulation W Officer" }],
+          [{ "text": "Denny Nealon (G44682099) > IHC > US Consumer Bank CEO" }],
+          [{ "text": "Efosa Osayamwen (G01258686) > BBDE > Chief Privacy Officer" }],
+          [{ "text": "Jeffrey Meli (G47612559) > IHC > US Research Officer" }],
+          [{ "text": "Joseph McGrath (G47655126) > IHC > US Banking Officer" }]
+        ]
+      }
+    },
+    { "type": "TEXT", "text": "The SMF or SMF equivalents and LE ExCo members named in this report represent BIA's assessment of the individuals for whom the report has the most relevance and does not introduce any new responsibilities or place any additional expectations on these individuals." },
+    { "type": "PAGE_BREAK" },
+    { "type": "HEADING", "text": "Issues Summary" },
+    { "type": "HEADING2", "text": "Summary of issues identified by BIA" },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": [""],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "oddRowColor": "F2F2F2",
+        "columnWidths": [100],
+        "rows": [
+          [{ "text": "Issue" }],
+          [{ "text": "Issue" }]
+        ]
+      }
+    },
+    {
+      "type": "REPORT_TABLE",
+      "tableConfig": {
+        "headers": ["", "Title", "Due Date", "Milestone", "", ""],
+        "headerBackgroundColor": "00395D",
+        "headerTextColor": "FFFFFF",
+        "oddRowColor": "F2F2F2",
+        "columnWidths": [10, 40, 10, 15, 10, 15],
+        "rows": [
+          [{ "text": "1" }, { "text": "Sample Issue Title" }, { "text": "01/06/2026" }, { "text": "M1" }, { "text": "Open" }, { "text": "Critical" }]
+        ]
+      }
+    }
+  ]
+}

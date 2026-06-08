@@ -1,0 +1,50 @@
+{
+  "settings": {
+    "orientation": "PORTRAIT",
+    "headerText": "Scatter Plot Test Report | ChartGenie",
+    "headerColor": "8FAADC"
+  },
+  "sections": [
+    {
+      "type": "HEADING", 
+      "text": "Scatter Plot Demonstration"
+    },
+    {
+      "type": "TEXT", 
+      "text": "This report demonstrates the new scatter plot functionality in ChartGenie."
+    },
+    {
+      "type": "CHART",
+      "chartConfig": {
+        "chartType": "SCATTER",
+        "title": "Performance vs Experience Analysis",
+        "width": 800,
+        "height": 600,
+        "backgroundColor": "F2F2F2",
+        "legendPosition": "BOTTOM",
+        "baseFontSize": 18,
+        "multiSeriesData": [
+          { "series": "Team A", "category": "1", "value": 85 },
+          { "series": "Team A", "category": "2", "value": 78 },
+          { "series": "Team A", "category": "3", "value": 92 },
+          { "series": "Team A", "category": "4", "value": 88 },
+          { "series": "Team A", "category": "5", "value": 95 },
+          { "series": "Team B", "category": "1", "value": 72 },
+          { "series": "Team B", "category": "2", "value": 68 },
+          { "series": "Team B", "category": "3", "value": 75 },
+          { "series": "Team B", "category": "4", "value": 82 },
+          { "series": "Team B", "category": "5", "value": 79 },
+          { "series": "Team C", "category": "1", "value": 90 },
+          { "series": "Team C", "category": "2", "value": 87 },
+          { "series": "Team C", "category": "3", "value": 93 },
+          { "series": "Team C", "category": "4", "value": 96 },
+          { "series": "Team C", "category": "5", "value": 98 }
+        ]
+      }
+    },
+    {
+      "type": "TEXT",
+      "text": "The scatter plot above shows the relationship between experience level (X-axis) and performance score (Y-axis) for three different teams."
+    }
+  ]
+}
